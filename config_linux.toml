@@ -8,7 +8,7 @@ src = "./engine/"
 include_dir = "./engine/include/"
 type = "dll"
 cflags = "-g -Wall -Wextra"
-libs = "-lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer -ldl -rdynamic"
+libs = "-lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer -ldl -rdynamic -lm"
 deps = []
 
 [[targets]]

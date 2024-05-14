@@ -1,6 +1,7 @@
 #include "core/ac_mem.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "core/ac_log.h"
 #include "core/ac_trace.h"
@@ -234,3 +235,20 @@ void ac_mem_exit(void) {
     ac_mem_entries_size = 0;
     ac_mem_entries_capacity = 0;
 }
+
+void ac_memcpy(void *dest, const void *src, size_t n) {
+    memcpy(dest, src, n);
+}
+
+void ac_memmove(void *dest, const void *src, size_t n) {
+    memmove(dest, src, n);
+}
+
+void ac_memset(void *s, int c, size_t n) {
+    memset(s, c, n);
+}
+
+void ac_memzero(void *s, size_t n) {
+    memset(s, 0, n);
+}
+

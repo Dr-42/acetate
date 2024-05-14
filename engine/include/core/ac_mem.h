@@ -51,6 +51,11 @@ void* ac_calloc(size_t nmemb, size_t size, ac_mem_entry_type_t type);
 void* ac_realloc(void *ptr, size_t size, ac_mem_entry_type_t type);
 void* ac_reallocarray(void *ptr, size_t nmemb, size_t size, ac_mem_entry_type_t type);
 
+void ac_memcpy(void *dest, const void *src, size_t n);
+void ac_memmove(void *dest, const void *src, size_t n);
+void ac_memset(void *s, int c, size_t n);
+void ac_memzero(void *s, size_t n);
+
 void ac_mem_exit(void);
 
 #endif // AC_CORE_MEM_H
