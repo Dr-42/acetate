@@ -1,7 +1,8 @@
 #include "core/ac_log.h"
 
-#include <stdarg.h>
 #include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
 
 static ac_log_level_t ac_log_level = AC_LOG_LEVEL_DEBUG;
 static bool ac_log_color = true;
@@ -17,8 +18,12 @@ static const char *ac_log_level_colors[] = {
 
 static const char *ac_log_level_reset_color = "\x1b[0m";
 
-void ac_log_enable_color(bool enable);
-void ac_log_set_level(ac_log_level_t level);
+void ac_log_enable_color(bool enable) {
+  ac_log_color = enable;
+}
+void ac_log_set_level(ac_log_level_t level) {
+  ac_log_level = level;
+}
 
 void ac_log(FILE *fd, ac_log_level_t level, const char *fmt, ...) {
   if (level < ac_log_level) {
@@ -79,4 +84,9 @@ void ac_log_error(const char *fmt, ...) {
 
 void ac_log_fatal(const char *fmt, ...) {
   ac_log(stderr, AC_LOG_LEVEL_FATAL, fmt);
+}
+
+void ac_log_fatal_exit(int exit_code, const char* fmt, ...) {
+  ac_log(stderr, AC_LOG_LEVEL_FATAL, fmt);
+  exit(exit_code);
 }
