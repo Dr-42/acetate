@@ -44,6 +44,17 @@ void ac_mem_track_enabled(bool enabled) {
     ac_mem_track = enabled;
 }
 
+void clear_previously_freed(void* ptr) {
+    for (int32_t i = 0; i < ac_mem_entries_size; i++) {
+        ac_mem_entry_t* entry = &ac_mem_entries[i];
+        if (entry->state == AC_MEM_ENTRY_STATE_FREED && entry->ptr == ptr) {
+            ac_mem_entries_size--;
+            ac_mem_entries[i] = ac_mem_entries[ac_mem_entries_size];
+            break;
+        }
+    }
+}
+
 void* ac_malloc(size_t size, ac_mem_entry_type_t type) {
     if (!ac_mem_track) {
         return ac_malloc_func(size);
@@ -53,8 +64,10 @@ void* ac_malloc(size_t size, ac_mem_entry_type_t type) {
         ac_mem_entries_capacity = ac_mem_entries_capacity == 0 ? 1 : ac_mem_entries_capacity * 2;
         ac_mem_entries = ac_reallocarray_func(ac_mem_entries, ac_mem_entries_capacity, sizeof(ac_mem_entry_t));
     }
+    void* ptr = ac_malloc_func(size);
+    clear_previously_freed(ptr);
     ac_mem_entry_t* entry = &ac_mem_entries[ac_mem_entries_size++];
-    entry->ptr = ac_malloc_func(size);
+    entry->ptr = ptr;
     entry->size = size;
     entry->state = AC_MEM_ENTRY_STATE_ALLOCATED;
     entry->type = type;
@@ -111,7 +124,9 @@ void* ac_calloc(size_t nmemb, size_t size, ac_mem_entry_type_t type) {
         ac_mem_entries = ac_reallocarray_func(ac_mem_entries, ac_mem_entries_capacity, sizeof(ac_mem_entry_t));
     }
     ac_mem_entry_t* entry = &ac_mem_entries[ac_mem_entries_size++];
-    entry->ptr = ac_calloc_func(nmemb, size);
+    void* ptr = ac_calloc_func(nmemb, size);
+    clear_previously_freed(ptr);
+    entry->ptr = ptr;
     entry->size = size;
     entry->state = AC_MEM_ENTRY_STATE_ALLOCATED;
     entry->type = type;
@@ -119,10 +134,8 @@ void* ac_calloc(size_t nmemb, size_t size, ac_mem_entry_type_t type) {
     entry->alloc_trace = ac_malloc_func(ALLOC_TRACE_SIZE * sizeof(void*));
     entry->alloc_trace_size = ac_get_intermediate_trace(entry->alloc_trace, ALLOC_TRACE_SIZE);
 
-    ac_log_debug("Allocated at:\n");
     char buffer[1024];
     ac_sprint_intermediate_trace(entry->alloc_trace, buffer, 0, entry->alloc_trace_size);
-    ac_log_debug("%s\n", buffer);
 
     entry->free_trace = NULL;
     entry->free_trace_size = 0;
