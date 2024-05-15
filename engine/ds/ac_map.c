@@ -130,7 +130,7 @@ static float load_factor(ac_map_t* map) {
 }
 
 static void ac_map_grow(ac_map_t* map) {
-    if (map->capacity >= SIZE_MAX / ac_map_grow_factor) {
+    if (map->capacity >= (size_t)ceilf((float)SIZE_MAX / ac_map_grow_factor)) {
         ac_log_fatal_exit("Map capacity overflow");
         return;
     }
