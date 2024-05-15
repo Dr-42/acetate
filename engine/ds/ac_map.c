@@ -100,7 +100,7 @@ static float load_factor(ac_map* map) {
 }
 
 
-static size_t ac_map_hash(const char* key, size_t capacity) {
+static size_t ac_map_hash(void* key, size_t capacity) {
 	return SIP64((const uint8_t*)key, strlen(key), 0, 0) % capacity;
 }
 
@@ -116,7 +116,7 @@ static void ac_map_grow(ac_map* map) {
 	for (size_t i = 0; i < map->capacity; i++) {
 		ac_map_entry* entry = &map->entries[i];
 		if (entry->key != NULL) {
-			size_t hash = ac_map_hash(entry->key, new_capacity);
+			size_t hash = map->map_hash(entry->key, new_capacity);
 			while (new_entries[hash].key != NULL) {
 				hash = (hash + 1) % new_capacity;
 			}
@@ -138,7 +138,7 @@ static void ac_map_shrink(ac_map* map) {
 		for (size_t i = 0; i < map->capacity; i++) {
 			ac_map_entry* entry = &map->entries[i];
 			if (entry->key != NULL) {
-				size_t hash = ac_map_hash(entry->key, new_capacity);
+				size_t hash = map->map_hash(entry->key, new_capacity);
 				while (new_entries[hash].key != NULL) {
 					hash = (hash + 1) % new_capacity;
 				}
@@ -161,6 +161,10 @@ ac_map* ac_map_create(size_t elem_size, ac_mem_entry_type_t entry_type) {
 	map->capacity = ac_map_default_capacity;
 	map->size = 0;
 	map->entry_type = entry_type;
+
+	map->map_cmp = (int (*)(void*, void*))strcmp;
+	map->map_hash = ac_map_hash;
+
 	map->entries = (ac_map_entry*)map->map_calloc(map->capacity, sizeof(ac_map_entry), entry_type);
 
 
@@ -170,7 +174,15 @@ ac_map* ac_map_create(size_t elem_size, ac_mem_entry_type_t entry_type) {
 	return map;
 }
 
-ac_map* ac_map_create_custom(size_t elem_size, ac_mem_entry_type_t entry_type, void* (*map_malloc)(size_t size, ac_mem_entry_type_t type), void (*map_free)(void *ptr), void* (*map_calloc)(size_t nmemb, size_t size, ac_mem_entry_type_t type)) {
+ac_map* ac_map_create_custom(
+	size_t elem_size,
+	ac_mem_entry_type_t entry_type,
+	void* (*map_malloc)(size_t size, ac_mem_entry_type_t type),
+	void (*map_free)(void *ptr),
+	void* (*map_calloc)(size_t nmemb, size_t size, ac_mem_entry_type_t type),
+    int (*cmp)(void* element1, void* element2),
+	size_t (*hash)(void* key, size_t capacity)
+) {
 	ac_map* map = (ac_map*)map_malloc(sizeof(ac_map), AC_MEM_ENTRY_DS);
 	map->elem_size = elem_size;
 	map->capacity = ac_map_default_capacity;
@@ -180,6 +192,9 @@ ac_map* ac_map_create_custom(size_t elem_size, ac_mem_entry_type_t entry_type, v
 	map->map_malloc = map_malloc;
 	map->map_free = map_free;
 	map->map_calloc = map_calloc;
+
+	map->map_cmp = cmp;
+	map->map_hash = hash;
 
 	map->entries = (ac_map_entry*)map->map_calloc(map->capacity, sizeof(ac_map_entry), entry_type);
 
@@ -204,12 +219,12 @@ void ac_map_destroy(ac_map* map) {
 
 void ac_map_insert(ac_map* map, const char* key, void* value) {
 	ac_map_grow(map);
-	size_t hash = ac_map_hash(key, map->capacity);
+	size_t hash = map->map_hash((void*)key, map->capacity);
 	do {
 		if (map->entries[hash].key == NULL) {
 			break;
 		}
-		if (strcmp(map->entries[hash].key, key) == 0) {
+		if (map->map_cmp(map->entries[hash].key, (void*)key) == 0) {
 			map->map_free(map->entries[hash].key);
 			map->map_free(map->entries[hash].value);
 			break;
@@ -225,9 +240,9 @@ void ac_map_insert(ac_map* map, const char* key, void* value) {
 }
 
 void* ac_map_get(ac_map* map, const char* key) {
-	size_t hash = ac_map_hash(key, map->capacity);
+	size_t hash = map->map_hash((void*)key, map->capacity);
 	while (map->entries[hash].key != NULL) {
-		if (strcmp(map->entries[hash].key, key) == 0) {
+		if (map->map_cmp(map->entries[hash].key, key) == 0) {
 			return map->entries[hash].value;
 		}
 		hash = (hash + 1) % map->capacity;
@@ -236,9 +251,9 @@ void* ac_map_get(ac_map* map, const char* key) {
 }
 
 void ac_map_remove(ac_map* map, const char* key) {
-	size_t hash = ac_map_hash(key, map->capacity);
+	size_t hash = map->map_hash(key, map->capacity);
 	while (map->entries[hash].key != NULL) {
-		if (strcmp(map->entries[hash].key, key) == 0) {
+		if (map->map_cmp(map->entries[hash].key, key) == 0) {
 			map->map_free(map->entries[hash].key);
 			map->map_free(map->entries[hash].value);
 			map->entries[hash].key = NULL;

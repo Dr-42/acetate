@@ -24,10 +24,22 @@ typedef struct ac_map {
 	void* (*map_malloc)(size_t size, ac_mem_entry_type_t type);
 	void (*map_free)(void *ptr);
 	void* (*map_calloc)(size_t nmemb, size_t size, ac_mem_entry_type_t type);
+	int (*map_cmp)(void* element1, void* element2);
+	size_t (*map_hash)(void* key, size_t capacity);
 } ac_map;
 
 ac_map* ac_map_create(size_t elem_size, ac_mem_entry_type_t entry_type);
-ac_map* ac_map_create_custom(size_t elem_size, ac_mem_entry_type_t entry_type, void* (*map_malloc)(size_t size, ac_mem_entry_type_t type), void (*map_free)(void *ptr), void* (*map_calloc)(size_t nmemb, size_t size, ac_mem_entry_type_t type));
+
+ac_map* ac_map_create_custom(
+	size_t elem_size,
+	ac_mem_entry_type_t entry_type,
+	void* (*map_malloc)(size_t size, ac_mem_entry_type_t type),
+	void (*map_free)(void *ptr),
+	void* (*map_calloc)(size_t nmemb, size_t size, ac_mem_entry_type_t type),
+    int (*cmp)(void* element1, void* element2),
+	size_t (*hash)(void* key, size_t capacity)
+);
+
 void ac_map_destroy(ac_map* map);
 
 void ac_map_insert(ac_map* map, const char* key, void* value);
