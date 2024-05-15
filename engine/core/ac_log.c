@@ -61,32 +61,3 @@ void ac_log(FILE *fd, ac_log_level_t level, const char *fmt, ...) {
   vfprintf(fd, fmt, args);
   va_end(args);
 }
-
-void ac_log_trace(const char *fmt, ...) {
-  ac_log(stdout, AC_LOG_LEVEL_TRACE, fmt);
-}
-
-void ac_log_debug(const char *fmt, ...) {
-  ac_log(stdout, AC_LOG_LEVEL_DEBUG, fmt);
-}
-
-void ac_log_info(const char *fmt, ...) {
-  ac_log(stdout, AC_LOG_LEVEL_INFO, fmt);
-}
-
-void ac_log_warn(const char *fmt, ...) {
-  ac_log(stderr, AC_LOG_LEVEL_WARN, fmt);
-}
-
-void ac_log_error(const char *fmt, ...) {
-  ac_log(stderr, AC_LOG_LEVEL_ERROR, fmt);
-}
-
-void ac_log_fatal(const char *fmt, ...) {
-  ac_log(stderr, AC_LOG_LEVEL_FATAL, fmt);
-}
-
-void ac_log_fatal_exit(int exit_code, const char* fmt, ...) {
-  ac_log(stderr, AC_LOG_LEVEL_FATAL, fmt);
-  exit(exit_code);
-}

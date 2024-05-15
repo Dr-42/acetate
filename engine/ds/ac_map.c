@@ -256,8 +256,8 @@ void ac_map_remove(ac_map* map, const char* key) {
 #include <stdio.h>
 
 void ac_map_print(ac_map* map) {
-	printf("|%10s|%3s|%6s|\n", "KEY", "VAL", "LIFE");
-	printf("|----------|---|------|\n");
+	ac_log_debug("|%10s|%3s|%6s|\n", "KEY", "VAL", "LIFE");
+	ac_log_debug("|----------|---|------|\n");
 	for (size_t i = 0; i < map->capacity; i++) {
 		ac_map_entry entry = map->entries[i];
 		char* life_str;
@@ -273,11 +273,11 @@ void ac_map_print(ac_map* map) {
 			break;
 		}
 		if (entry.key == NULL) {
-			printf("|%10s|%3s|%6s|\n", "NULL", "n/a", life_str);
+			ac_log_debug("|%10s|%3s|%6s|\n", "NULL", "n/a", life_str);
 		} else {
-			printf("|%10s|%3d|%6s|\n", entry.key, *(int*)entry.value, life_str);
+			ac_log_debug("|%10s|%3d|%6s|\n", entry.key, *(int*)entry.value, life_str);
 		}
 	}
-	printf("\n");
+	ac_log_debug("\n");
 }
 
