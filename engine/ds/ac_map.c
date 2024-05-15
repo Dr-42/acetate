@@ -200,13 +200,17 @@ void ac_map_destroy(ac_map* map) {
 void ac_map_insert(ac_map* map, const char* key, void* value) {
 	ac_map_grow(map);
 	size_t hash = ac_map_hash(key, map->capacity);
-	while (map->entries[hash].key != NULL) {
+	do {
+		if (map->entries[hash].key == NULL) {
+			break;
+		}
+		if (strcmp(map->entries[hash].key, key) == 0) {
+			ac_free(map->entries[hash].key);
+			ac_free(map->entries[hash].value);
+			break;
+		}
 		hash = (hash + 1) % map->capacity;
-	}
-	if (map->entries[hash].life == AC_MAP_ENTRY_LIFE_ALIVE) {
-		ac_free(map->entries[hash].key);
-		ac_free(map->entries[hash].value);
-	}
+	} while (1);
 	map->entries[hash].key = ac_malloc(strlen(key) + 1, map->entry_type);
 	strcpy(map->entries[hash].key, key);
 	map->entries[hash].value = ac_malloc(map->elem_size, map->entry_type);
