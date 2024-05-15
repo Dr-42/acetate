@@ -1,9 +1,8 @@
-#include "core/ac_mem.h"
-
 #include <stdlib.h>
 #include <string.h>
 
 #include "core/ac_log.h"
+#include "core/ac_mem.h"
 #include "core/ac_trace.h"
 
 static ac_malloc_t ac_malloc_func = malloc;
@@ -20,29 +19,19 @@ static int32_t ac_mem_entries_capacity = 0;
 
 #define ALLOC_TRACE_SIZE 32
 
-void set_custom_malloc(ac_malloc_t malloc) {
-    ac_malloc_func = malloc;
-}
+void set_custom_malloc(ac_malloc_t malloc) { ac_malloc_func = malloc; }
 
-void set_custom_free(ac_free_t free) {
-    ac_free_func = free;
-}
+void set_custom_free(ac_free_t free) { ac_free_func = free; }
 
-void set_custom_calloc(ac_calloc_t calloc) {
-    ac_calloc_func = calloc;
-}
+void set_custom_calloc(ac_calloc_t calloc) { ac_calloc_func = calloc; }
 
-void set_custom_realloc(ac_realloc_t realloc) {
-    ac_realloc_func = realloc;
-}
+void set_custom_realloc(ac_realloc_t realloc) { ac_realloc_func = realloc; }
 
 void set_custom_reallocarray(ac_reallocarray_t reallocarray) {
     ac_reallocarray_func = reallocarray;
 }
 
-void ac_mem_track_enabled(bool enabled) {
-    ac_mem_track = enabled;
-}
+void ac_mem_track_enabled(bool enabled) { ac_mem_track = enabled; }
 
 void clear_previously_freed(void* ptr) {
     for (int32_t i = 0; i < ac_mem_entries_size; i++) {
@@ -61,8 +50,10 @@ void* ac_malloc(size_t size, ac_mem_entry_type_t type) {
     }
 
     if (ac_mem_entries_size == ac_mem_entries_capacity) {
-        ac_mem_entries_capacity = ac_mem_entries_capacity == 0 ? 1 : ac_mem_entries_capacity * 2;
-        ac_mem_entries = ac_reallocarray_func(ac_mem_entries, ac_mem_entries_capacity, sizeof(ac_mem_entry_t));
+        ac_mem_entries_capacity =
+            ac_mem_entries_capacity == 0 ? 1 : ac_mem_entries_capacity * 2;
+        ac_mem_entries = ac_reallocarray_func(
+            ac_mem_entries, ac_mem_entries_capacity, sizeof(ac_mem_entry_t));
     }
     void* ptr = ac_malloc_func(size);
     clear_previously_freed(ptr);
@@ -73,7 +64,8 @@ void* ac_malloc(size_t size, ac_mem_entry_type_t type) {
     entry->type = type;
 
     entry->alloc_trace = ac_malloc_func(ALLOC_TRACE_SIZE * sizeof(void*));
-    entry->alloc_trace_size = ac_get_intermediate_trace(entry->alloc_trace, ALLOC_TRACE_SIZE);
+    entry->alloc_trace_size =
+        ac_get_intermediate_trace(entry->alloc_trace, ALLOC_TRACE_SIZE);
     entry->free_trace = NULL;
     entry->free_trace_size = 0;
     entry->realloc_traces = NULL;
@@ -84,7 +76,7 @@ void* ac_malloc(size_t size, ac_mem_entry_type_t type) {
     return entry->ptr;
 }
 
-void ac_free(void *ptr) {
+void ac_free(void* ptr) {
     if (!ac_mem_track) {
         ac_free_func(ptr);
     }
@@ -96,18 +88,22 @@ void ac_free(void *ptr) {
                 ac_log_fatal("Double free detected\n");
                 ac_log_fatal("Allocated at:\n");
                 char buffer[1024];
-                ac_sprint_intermediate_trace(entry->alloc_trace, buffer, 0, entry->alloc_trace_size);
+                ac_sprint_intermediate_trace(entry->alloc_trace, buffer, 0,
+                                             entry->alloc_trace_size);
                 ac_log_fatal("%s\n", buffer);
                 ac_log_fatal("Freed previously at :\n");
-                ac_sprint_intermediate_trace(entry->free_trace, buffer, 0, entry->free_trace_size);
+                ac_sprint_intermediate_trace(entry->free_trace, buffer, 0,
+                                             entry->free_trace_size);
                 ac_log_fatal("%s\n", buffer);
                 ac_log_fatal("Current free at:\n");
                 ac_print_trace(2);
                 return;
             }
             entry->state = AC_MEM_ENTRY_STATE_FREED;
-            entry->free_trace = ac_malloc_func(ALLOC_TRACE_SIZE * sizeof(void*));
-            entry->free_trace_size = ac_get_intermediate_trace(entry->free_trace, ALLOC_TRACE_SIZE);
+            entry->free_trace =
+                ac_malloc_func(ALLOC_TRACE_SIZE * sizeof(void*));
+            entry->free_trace_size =
+                ac_get_intermediate_trace(entry->free_trace, ALLOC_TRACE_SIZE);
             ac_free_func(ptr);
             return;
         }
@@ -120,8 +116,10 @@ void* ac_calloc(size_t nmemb, size_t size, ac_mem_entry_type_t type) {
     }
 
     if (ac_mem_entries_size == ac_mem_entries_capacity) {
-        ac_mem_entries_capacity = ac_mem_entries_capacity == 0 ? 1 : ac_mem_entries_capacity * 2;
-        ac_mem_entries = ac_reallocarray_func(ac_mem_entries, ac_mem_entries_capacity, sizeof(ac_mem_entry_t));
+        ac_mem_entries_capacity =
+            ac_mem_entries_capacity == 0 ? 1 : ac_mem_entries_capacity * 2;
+        ac_mem_entries = ac_reallocarray_func(
+            ac_mem_entries, ac_mem_entries_capacity, sizeof(ac_mem_entry_t));
     }
     ac_mem_entry_t* entry = &ac_mem_entries[ac_mem_entries_size++];
     void* ptr = ac_calloc_func(nmemb, size);
@@ -132,10 +130,12 @@ void* ac_calloc(size_t nmemb, size_t size, ac_mem_entry_type_t type) {
     entry->type = type;
 
     entry->alloc_trace = ac_malloc_func(ALLOC_TRACE_SIZE * sizeof(void*));
-    entry->alloc_trace_size = ac_get_intermediate_trace(entry->alloc_trace, ALLOC_TRACE_SIZE);
+    entry->alloc_trace_size =
+        ac_get_intermediate_trace(entry->alloc_trace, ALLOC_TRACE_SIZE);
 
     char buffer[1024];
-    ac_sprint_intermediate_trace(entry->alloc_trace, buffer, 0, entry->alloc_trace_size);
+    ac_sprint_intermediate_trace(entry->alloc_trace, buffer, 0,
+                                 entry->alloc_trace_size);
 
     entry->free_trace = NULL;
     entry->free_trace_size = 0;
@@ -147,7 +147,7 @@ void* ac_calloc(size_t nmemb, size_t size, ac_mem_entry_type_t type) {
     return entry->ptr;
 }
 
-void* ac_realloc(void *ptr, size_t size, ac_mem_entry_type_t type) {
+void* ac_realloc(void* ptr, size_t size, ac_mem_entry_type_t type) {
     if (!ac_mem_track) {
         return ac_realloc_func(ptr, size);
     }
@@ -160,12 +160,23 @@ void* ac_realloc(void *ptr, size_t size, ac_mem_entry_type_t type) {
         if (entry->ptr == ptr) {
             entry->state = AC_MEM_ENTRY_STATE_REALLOCATED;
             if (entry->realloc_traces_size == entry->realloc_traces_capacity) {
-                entry->realloc_traces_capacity = entry->realloc_traces_capacity == 0 ? 1 : entry->realloc_traces_capacity * 2;
-                entry->realloc_traces = ac_reallocarray_func(entry->realloc_traces, entry->realloc_traces_capacity, sizeof(void*));
-                entry->realloc_trace_sizes = ac_reallocarray_func(entry->realloc_trace_sizes, entry->realloc_traces_capacity, sizeof(int32_t));
+                entry->realloc_traces_capacity =
+                    entry->realloc_traces_capacity == 0
+                        ? 1
+                        : entry->realloc_traces_capacity * 2;
+                entry->realloc_traces = ac_reallocarray_func(
+                    entry->realloc_traces, entry->realloc_traces_capacity,
+                    sizeof(void*));
+                entry->realloc_trace_sizes = ac_reallocarray_func(
+                    entry->realloc_trace_sizes, entry->realloc_traces_capacity,
+                    sizeof(int32_t));
             }
-            entry->realloc_traces[entry->realloc_traces_size] = ac_malloc_func(ALLOC_TRACE_SIZE * sizeof(void*));
-            entry->realloc_trace_sizes[entry->realloc_traces_size] = ac_get_intermediate_trace(entry->realloc_traces[entry->realloc_traces_size], ALLOC_TRACE_SIZE);
+            entry->realloc_traces[entry->realloc_traces_size] =
+                ac_malloc_func(ALLOC_TRACE_SIZE * sizeof(void*));
+            entry->realloc_trace_sizes[entry->realloc_traces_size] =
+                ac_get_intermediate_trace(
+                    entry->realloc_traces[entry->realloc_traces_size],
+                    ALLOC_TRACE_SIZE);
             entry->realloc_traces_size++;
             entry->ptr = ac_realloc_func(ptr, size);
             return entry->ptr;
@@ -177,7 +188,8 @@ void* ac_realloc(void *ptr, size_t size, ac_mem_entry_type_t type) {
     return NULL;
 }
 
-void* ac_reallocarray(void *ptr, size_t nmemb, size_t size, ac_mem_entry_type_t type) {
+void* ac_reallocarray(void* ptr, size_t nmemb, size_t size,
+                      ac_mem_entry_type_t type) {
     if (!ac_mem_track) {
         return ac_reallocarray_func(ptr, nmemb, size);
     }
@@ -190,12 +202,23 @@ void* ac_reallocarray(void *ptr, size_t nmemb, size_t size, ac_mem_entry_type_t 
         if (entry->ptr == ptr) {
             entry->state = AC_MEM_ENTRY_STATE_REALLOCATED;
             if (entry->realloc_traces_size == entry->realloc_traces_capacity) {
-                entry->realloc_traces_capacity = entry->realloc_traces_capacity == 0 ? 1 : entry->realloc_traces_capacity * 2;
-                entry->realloc_traces = ac_reallocarray_func(entry->realloc_traces, entry->realloc_traces_capacity, sizeof(void*));
-                entry->realloc_trace_sizes = ac_reallocarray_func(entry->realloc_trace_sizes, entry->realloc_traces_capacity, sizeof(int32_t));
+                entry->realloc_traces_capacity =
+                    entry->realloc_traces_capacity == 0
+                        ? 1
+                        : entry->realloc_traces_capacity * 2;
+                entry->realloc_traces = ac_reallocarray_func(
+                    entry->realloc_traces, entry->realloc_traces_capacity,
+                    sizeof(void*));
+                entry->realloc_trace_sizes = ac_reallocarray_func(
+                    entry->realloc_trace_sizes, entry->realloc_traces_capacity,
+                    sizeof(int32_t));
             }
-            entry->realloc_traces[entry->realloc_traces_size] = ac_malloc_func(ALLOC_TRACE_SIZE * sizeof(void*));
-            entry->realloc_trace_sizes[entry->realloc_traces_size] = ac_get_intermediate_trace(entry->realloc_traces[entry->realloc_traces_size], ALLOC_TRACE_SIZE);
+            entry->realloc_traces[entry->realloc_traces_size] =
+                ac_malloc_func(ALLOC_TRACE_SIZE * sizeof(void*));
+            entry->realloc_trace_sizes[entry->realloc_traces_size] =
+                ac_get_intermediate_trace(
+                    entry->realloc_traces[entry->realloc_traces_size],
+                    ALLOC_TRACE_SIZE);
             entry->realloc_traces_size++;
             entry->ptr = ac_reallocarray_func(ptr, nmemb, size);
             return entry->ptr;
@@ -214,26 +237,28 @@ void ac_mem_exit(void) {
             ac_log_warn("Memory leak detected\n");
             ac_log_warn("Allocated at:\n");
             char buffer[1024];
-            ac_sprint_intermediate_trace(entry->alloc_trace, buffer, 0, entry->alloc_trace_size);
+            ac_sprint_intermediate_trace(entry->alloc_trace, buffer, 0,
+                                         entry->alloc_trace_size);
             ac_log_warn("\n---\n%s\n---\n", buffer);
             ac_log_warn("Not freed\n");
         } else if (entry->state == AC_MEM_ENTRY_STATE_REALLOCATED) {
             ac_log_warn("Memory leak detected\n");
             ac_log_warn("Allocated at:\n");
             char buffer[1024];
-            ac_sprint_intermediate_trace(entry->alloc_trace, buffer, 0, entry->alloc_trace_size);
+            ac_sprint_intermediate_trace(entry->alloc_trace, buffer, 0,
+                                         entry->alloc_trace_size);
             ac_log_warn("\n---\n%s\n---\n", buffer);
             for (int32_t j = 0; j < entry->realloc_traces_size; j++) {
                 ac_log_warn("Reallocated at:\n");
-                ac_sprint_intermediate_trace(entry->realloc_traces[j], buffer, 0, entry->realloc_trace_sizes[j]);
+                ac_sprint_intermediate_trace(entry->realloc_traces[j], buffer,
+                                             0, entry->realloc_trace_sizes[j]);
                 ac_log_warn("\n---\n%s\n---\n", buffer);
             }
             ac_log_warn("Reallocated but not freed\n");
         }
         ac_free_func(entry->alloc_trace);
-        if (entry->free_trace != NULL)
-            ac_free_func(entry->free_trace);
-        
+        if (entry->free_trace != NULL) ac_free_func(entry->free_trace);
+
         if (entry->realloc_traces == NULL) {
             continue;
         }
@@ -249,19 +274,12 @@ void ac_mem_exit(void) {
     ac_mem_entries_capacity = 0;
 }
 
-void ac_memcpy(void *dest, const void *src, size_t n) {
-    memcpy(dest, src, n);
-}
+void ac_memcpy(void* dest, const void* src, size_t n) { memcpy(dest, src, n); }
 
-void ac_memmove(void *dest, const void *src, size_t n) {
+void ac_memmove(void* dest, const void* src, size_t n) {
     memmove(dest, src, n);
 }
 
-void ac_memset(void *s, int c, size_t n) {
-    memset(s, c, n);
-}
+void ac_memset(void* s, int c, size_t n) { memset(s, c, n); }
 
-void ac_memzero(void *s, size_t n) {
-    memset(s, 0, n);
-}
-
+void ac_memzero(void* s, size_t n) { memset(s, 0, n); }
