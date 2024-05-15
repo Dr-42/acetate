@@ -95,7 +95,7 @@ static size_t ac_map_default_capacity = 16;
 static size_t ac_map_min_capacity = 8;
 static float ac_map_grow_factor = 1.6f;
 
-static float load_factor(ac_map* map) {
+static float load_factor(ac_map_t* map) {
 	return (float)map->size / (float)map->capacity;
 }
 
@@ -104,17 +104,17 @@ static size_t ac_map_hash(void* key, size_t capacity) {
 	return SIP64((const uint8_t*)key, strlen(key), 0, 0) % capacity;
 }
 
-static void ac_map_grow(ac_map* map) {
+static void ac_map_grow(ac_map_t* map) {
 	if (load_factor(map) < grow_load_factor) {
 		return;
 	}
 	size_t new_capacity = (size_t)ceilf(map->capacity * ac_map_grow_factor);
-	ac_map_entry* new_entries = (ac_map_entry*)map->map_calloc(new_capacity, sizeof(ac_map_entry), map->entry_type);
+	ac_map_entry_t* new_entries = (ac_map_entry_t*)map->map_calloc(new_capacity, sizeof(ac_map_entry_t), map->entry_type);
 	for (size_t i = 0; i < new_capacity; i++) {
-		ac_memzero(&new_entries[i], sizeof(ac_map_entry));
+		ac_memzero(&new_entries[i], sizeof(ac_map_entry_t));
 	}
 	for (size_t i = 0; i < map->capacity; i++) {
-		ac_map_entry* entry = &map->entries[i];
+		ac_map_entry_t* entry = &map->entries[i];
 		if (entry->key != NULL) {
 			size_t hash = map->map_hash(entry->key, new_capacity);
 			while (new_entries[hash].key != NULL) {
@@ -128,15 +128,15 @@ static void ac_map_grow(ac_map* map) {
 	map->capacity = new_capacity;
 }
 
-static void ac_map_shrink(ac_map* map) {
+static void ac_map_shrink(ac_map_t* map) {
 	if (load_factor(map) > shrink_load_factor && map->capacity > ac_map_min_capacity) {
 		size_t new_capacity = (size_t)ceilf(map->capacity / ac_map_grow_factor);
-		ac_map_entry* new_entries = (ac_map_entry*)map->map_calloc(new_capacity, sizeof(ac_map_entry), map->entry_type);
+		ac_map_entry_t* new_entries = (ac_map_entry_t*)map->map_calloc(new_capacity, sizeof(ac_map_entry_t), map->entry_type);
 		for (size_t i = 0; i < new_capacity; i++) {
-			ac_memzero(&new_entries[i], sizeof(ac_map_entry));
+			ac_memzero(&new_entries[i], sizeof(ac_map_entry_t));
 		}
 		for (size_t i = 0; i < map->capacity; i++) {
-			ac_map_entry* entry = &map->entries[i];
+			ac_map_entry_t* entry = &map->entries[i];
 			if (entry->key != NULL) {
 				size_t hash = map->map_hash(entry->key, new_capacity);
 				while (new_entries[hash].key != NULL) {
@@ -151,8 +151,8 @@ static void ac_map_shrink(ac_map* map) {
 	}
 }
 
-ac_map* ac_map_create(size_t elem_size, ac_mem_entry_type_t entry_type) {
-	ac_map* map = (ac_map*)ac_malloc(sizeof(ac_map), AC_MEM_ENTRY_DS);
+ac_map_t* ac_map_create(size_t elem_size, ac_mem_entry_type_t entry_type) {
+	ac_map_t* map = (ac_map_t*)ac_malloc(sizeof(ac_map_t), AC_MEM_ENTRY_DS);
 
 	map->map_malloc = ac_malloc;
 	map->map_free = ac_free;
@@ -165,16 +165,16 @@ ac_map* ac_map_create(size_t elem_size, ac_mem_entry_type_t entry_type) {
 	map->map_cmp = (int (*)(void*, void*))strcmp;
 	map->map_hash = ac_map_hash;
 
-	map->entries = (ac_map_entry*)map->map_calloc(map->capacity, sizeof(ac_map_entry), entry_type);
+	map->entries = (ac_map_entry_t*)map->map_calloc(map->capacity, sizeof(ac_map_entry_t), entry_type);
 
 
 	for (size_t i = 0; i < map->capacity; i++) {
-		ac_memzero(&map->entries[i], sizeof(ac_map_entry));
+		ac_memzero(&map->entries[i], sizeof(ac_map_entry_t));
 	}
 	return map;
 }
 
-ac_map* ac_map_create_custom(
+ac_map_t* ac_map_create_custom(
 	size_t elem_size,
 	ac_mem_entry_type_t entry_type,
 	void* (*map_malloc)(size_t size, ac_mem_entry_type_t type),
@@ -183,7 +183,7 @@ ac_map* ac_map_create_custom(
     int (*cmp)(void* element1, void* element2),
 	size_t (*hash)(void* key, size_t capacity)
 ) {
-	ac_map* map = (ac_map*)map_malloc(sizeof(ac_map), AC_MEM_ENTRY_DS);
+	ac_map_t* map = (ac_map_t*)map_malloc(sizeof(ac_map_t), AC_MEM_ENTRY_DS);
 	map->elem_size = elem_size;
 	map->capacity = ac_map_default_capacity;
 	map->size = 0;
@@ -196,17 +196,17 @@ ac_map* ac_map_create_custom(
 	map->map_cmp = cmp;
 	map->map_hash = hash;
 
-	map->entries = (ac_map_entry*)map->map_calloc(map->capacity, sizeof(ac_map_entry), entry_type);
+	map->entries = (ac_map_entry_t*)map->map_calloc(map->capacity, sizeof(ac_map_entry_t), entry_type);
 
 	for (size_t i = 0; i < map->capacity; i++) {
-		ac_memzero(&map->entries[i], sizeof(ac_map_entry));
+		ac_memzero(&map->entries[i], sizeof(ac_map_entry_t));
 	}
 	return map;
 }
 
-void ac_map_destroy(ac_map* map) {
+void ac_map_destroy(ac_map_t* map) {
 	for (size_t i = 0; i < map->capacity; i++) {
-		ac_map_entry* entry = &map->entries[i];
+		ac_map_entry_t* entry = &map->entries[i];
 		if (entry->life == AC_MAP_ENTRY_LIFE_ALIVE) {
 			map->map_free(entry->key);
 			map->map_free(entry->value);
@@ -217,7 +217,7 @@ void ac_map_destroy(ac_map* map) {
 }
 
 
-void ac_map_insert(ac_map* map, const char* key, void* value) {
+void ac_map_insert(ac_map_t* map, void* key, void* value) {
 	ac_map_grow(map);
 	size_t hash = map->map_hash((void*)key, map->capacity);
 	do {
@@ -239,7 +239,7 @@ void ac_map_insert(ac_map* map, const char* key, void* value) {
 	map->size++;
 }
 
-void* ac_map_get(ac_map* map, const char* key) {
+void* ac_map_get(ac_map_t* map, void* key) {
 	size_t hash = map->map_hash((void*)key, map->capacity);
 	while (map->entries[hash].key != NULL) {
 		if (map->map_cmp(map->entries[hash].key, key) == 0) {
@@ -250,7 +250,7 @@ void* ac_map_get(ac_map* map, const char* key) {
 	return NULL;
 }
 
-void ac_map_remove(ac_map* map, const char* key) {
+void ac_map_remove(ac_map_t* map, void* key) {
 	size_t hash = map->map_hash(key, map->capacity);
 	while (map->entries[hash].key != NULL) {
 		if (map->map_cmp(map->entries[hash].key, key) == 0) {
@@ -270,11 +270,11 @@ void ac_map_remove(ac_map* map, const char* key) {
 
 #include <stdio.h>
 
-void ac_map_print(ac_map* map) {
+void ac_map_print(ac_map_t* map) {
 	ac_log_debug("|%10s|%3s|%6s|\n", "KEY", "VAL", "LIFE");
 	ac_log_debug("|----------|---|------|\n");
 	for (size_t i = 0; i < map->capacity; i++) {
-		ac_map_entry entry = map->entries[i];
+		ac_map_entry_t entry = map->entries[i];
 		char* life_str;
 		switch (entry.life) {
 			case AC_MAP_ENTRY_LIFE_EMPTY:
@@ -296,3 +296,11 @@ void ac_map_print(ac_map* map) {
 	ac_log_debug("\n");
 }
 
+void ac_map_iter(ac_map_t* map, void (*callback)(void* key, void* value)) {
+	for (size_t i = 0; i < map->capacity; i++) {
+		ac_map_entry_t entry = map->entries[i];
+		if (entry.key != NULL) {
+			callback(entry.key, entry.value);
+		}
+	}
+}

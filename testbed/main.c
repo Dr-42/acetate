@@ -15,7 +15,7 @@ void segfaulter(int sig) {
 int main() {
 	printf("Hello, World!\n");
 	signal(SIGSEGV, segfaulter);
-	ac_map* map = ac_map_create(sizeof(int), AC_MEM_ENTRY_CORE);
+	ac_map_t* map = ac_map_create(sizeof(int), AC_MEM_ENTRY_CORE);
 	ac_map_print(map);
 	
 	int vals[17] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
