@@ -178,7 +178,7 @@ ac_mat3_t ac_mat3_transpose(ac_mat3_t mat) {
     return result;
 }
 
-float heim_mat3_determinant(ac_mat3_t mat) {
+float ac_mat3_determinant(ac_mat3_t mat) {
     float det = 0.0f;
     for (size_t i = 0; i < 3; i++) {
         det += (mat.m[0][i] * (mat.m[1][(i + 1) % 3] * mat.m[2][(i + 2) % 3] -
@@ -189,7 +189,7 @@ float heim_mat3_determinant(ac_mat3_t mat) {
 
 ac_mat3_t ac_mat3_inverse(ac_mat3_t mat) {
     ac_mat3_t result = {0};
-    float det = heim_mat3_determinant(mat);
+    float det = ac_mat3_determinant(mat);
     if (det == 0.0f) {
         return result;
     }

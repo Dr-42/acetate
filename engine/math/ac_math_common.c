@@ -25,4 +25,4 @@ float ac_math_asin(float a) { return asinf(a); }
 float ac_math_acos(float a) { return acosf(a); }
 float ac_math_atan(float a) { return atanf(a); }
 
-float ac_math_sqrtf(float a) { return sqrtf(a); }
+float ac_math_sqrt(float a) { return sqrtf(a); }

@@ -1,8 +1,6 @@
 #include "math/ac_math_common.h"
 #include "math/ac_math_vec.h"
 
-float heim_deg_to_rad(float deg) { return deg * (AC_PI / 180.0f); }
-
 ac_vec2f_t ac_vec2f_add(ac_vec2f_t a, ac_vec2f_t b) {
     return (ac_vec2f_t){a.x + b.x, a.y + b.y};
 }
@@ -33,7 +31,7 @@ ac_vec3f_t ac_vec3f_cross(ac_vec3f_t a, ac_vec3f_t b) {
 }
 
 ac_vec3f_t ac_vec3f_normalize(ac_vec3f_t a) {
-    float length = ac_math_sqrtf(a.x * a.x + a.y * a.y + a.z * a.z);
+    float length = ac_math_sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
     return (ac_vec3f_t){a.x / length, a.y / length, a.z / length};
 }
 
@@ -47,7 +45,7 @@ ac_vec3f_t ac_vec3f_mix(ac_vec3f_t a, ac_vec3f_t b, float t) {
 }
 
 ac_vec4f_t ac_vec4f_normalize(ac_vec4f_t a) {
-    float length = ac_math_sqrtf(a.x * a.x + a.y * a.y + a.z * a.z + a.w * a.w);
+    float length = ac_math_sqrt(a.x * a.x + a.y * a.y + a.z * a.z + a.w * a.w);
     return (ac_vec4f_t){a.x / length, a.y / length, a.z / length, a.w / length};
 }
 
