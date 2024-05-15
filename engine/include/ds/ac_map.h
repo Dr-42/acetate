@@ -3,9 +3,31 @@
 
 #include "core/ac_mem.h"
 
-typedef struct ac_map ac_map;
+typedef enum ac_map_entry_life {
+	AC_MAP_ENTRY_LIFE_EMPTY = 0,
+	AC_MAP_ENTRY_LIFE_ALIVE = 1,
+	AC_MAP_ENTRY_LIFE_TOMBSTONE = 2,
+} ac_map_entry_life;
+
+typedef struct ac_map_entry {
+	char* key;
+	void* value;
+	ac_map_entry_life life;
+} ac_map_entry;
+
+typedef struct ac_map {
+	ac_mem_entry_type_t entry_type;
+	ac_map_entry* entries;
+	size_t elem_size;
+	size_t capacity;
+	size_t size;
+	void* (*map_malloc)(size_t size, ac_mem_entry_type_t type);
+	void (*map_free)(void *ptr);
+	void* (*map_calloc)(size_t nmemb, size_t size, ac_mem_entry_type_t type);
+} ac_map;
 
 ac_map* ac_map_create(size_t elem_size, ac_mem_entry_type_t entry_type);
+ac_map* ac_map_create_custom(size_t elem_size, ac_mem_entry_type_t entry_type, void* (*map_malloc)(size_t size, ac_mem_entry_type_t type), void (*map_free)(void *ptr), void* (*map_calloc)(size_t nmemb, size_t size, ac_mem_entry_type_t type));
 void ac_map_destroy(ac_map* map);
 
 void ac_map_insert(ac_map* map, const char* key, void* value);

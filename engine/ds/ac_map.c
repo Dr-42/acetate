@@ -23,7 +23,7 @@
 // default: SipHash-2-4
 //-----------------------------------------------------------------------------
 static uint64_t SIP64(const uint8_t *in, const size_t inlen, uint64_t seed0,
-					  uint64_t seed1) 
+uint64_t seed1) 
 {
 #define U8TO64_LE(p) \
 	{  (((uint64_t)((p)[0])) | ((uint64_t)((p)[1]) << 8) | \
@@ -89,26 +89,6 @@ static uint64_t SIP64(const uint8_t *in, const size_t inlen, uint64_t seed0,
 #include <string.h>
 #include <math.h>
 
-typedef enum ac_map_entry_life {
-	AC_MAP_ENTRY_LIFE_EMPTY = 0,
-	AC_MAP_ENTRY_LIFE_ALIVE = 1,
-	AC_MAP_ENTRY_LIFE_TOMBSTONE = 2,
-} ac_map_entry_life;
-
-typedef struct ac_map_entry {
-	char* key;
-	void* value;
-	ac_map_entry_life life;
-} ac_map_entry;
-
-typedef struct ac_map {
-	ac_mem_entry_type_t entry_type;
-	ac_map_entry* entries;
-	size_t elem_size;
-	size_t capacity;
-	size_t size;
-} ac_map;
-
 static float grow_load_factor = 0.75f;
 static float shrink_load_factor = 0.25f;
 static size_t ac_map_default_capacity = 16;
@@ -129,7 +109,7 @@ static void ac_map_grow(ac_map* map) {
 		return;
 	}
 	size_t new_capacity = (size_t)ceilf(map->capacity * ac_map_grow_factor);
-	ac_map_entry* new_entries = (ac_map_entry*)ac_calloc(new_capacity, sizeof(ac_map_entry), map->entry_type);
+	ac_map_entry* new_entries = (ac_map_entry*)map->map_calloc(new_capacity, sizeof(ac_map_entry), map->entry_type);
 	for (size_t i = 0; i < new_capacity; i++) {
 		ac_memzero(&new_entries[i], sizeof(ac_map_entry));
 	}
@@ -143,7 +123,7 @@ static void ac_map_grow(ac_map* map) {
 			new_entries[hash] = *entry;
 		}
 	}
-	ac_free(map->entries);
+	map->map_free(map->entries);
 	map->entries = new_entries;
 	map->capacity = new_capacity;
 }
@@ -151,7 +131,7 @@ static void ac_map_grow(ac_map* map) {
 static void ac_map_shrink(ac_map* map) {
 	if (load_factor(map) > shrink_load_factor && map->capacity > ac_map_min_capacity) {
 		size_t new_capacity = (size_t)ceilf(map->capacity / ac_map_grow_factor);
-		ac_map_entry* new_entries = (ac_map_entry*)ac_calloc(new_capacity, sizeof(ac_map_entry), map->entry_type);
+		ac_map_entry* new_entries = (ac_map_entry*)map->map_calloc(new_capacity, sizeof(ac_map_entry), map->entry_type);
 		for (size_t i = 0; i < new_capacity; i++) {
 			ac_memzero(&new_entries[i], sizeof(ac_map_entry));
 		}
@@ -165,7 +145,7 @@ static void ac_map_shrink(ac_map* map) {
 				new_entries[hash] = *entry;
 			}
 		}
-		ac_free(map->entries);
+		map->map_free(map->entries);
 		map->entries = new_entries;
 		map->capacity = new_capacity;
 	}
@@ -173,11 +153,36 @@ static void ac_map_shrink(ac_map* map) {
 
 ac_map* ac_map_create(size_t elem_size, ac_mem_entry_type_t entry_type) {
 	ac_map* map = (ac_map*)ac_malloc(sizeof(ac_map), AC_MEM_ENTRY_DS);
+
+	map->map_malloc = ac_malloc;
+	map->map_free = ac_free;
+	map->map_calloc = ac_calloc;
 	map->elem_size = elem_size;
 	map->capacity = ac_map_default_capacity;
 	map->size = 0;
 	map->entry_type = entry_type;
-	map->entries = (ac_map_entry*)ac_calloc(map->capacity, sizeof(ac_map_entry), entry_type);
+	map->entries = (ac_map_entry*)map->map_calloc(map->capacity, sizeof(ac_map_entry), entry_type);
+
+
+	for (size_t i = 0; i < map->capacity; i++) {
+		ac_memzero(&map->entries[i], sizeof(ac_map_entry));
+	}
+	return map;
+}
+
+ac_map* ac_map_create_custom(size_t elem_size, ac_mem_entry_type_t entry_type, void* (*map_malloc)(size_t size, ac_mem_entry_type_t type), void (*map_free)(void *ptr), void* (*map_calloc)(size_t nmemb, size_t size, ac_mem_entry_type_t type)) {
+	ac_map* map = (ac_map*)map_malloc(sizeof(ac_map), AC_MEM_ENTRY_DS);
+	map->elem_size = elem_size;
+	map->capacity = ac_map_default_capacity;
+	map->size = 0;
+	map->entry_type = entry_type;
+
+	map->map_malloc = map_malloc;
+	map->map_free = map_free;
+	map->map_calloc = map_calloc;
+
+	map->entries = (ac_map_entry*)map->map_calloc(map->capacity, sizeof(ac_map_entry), entry_type);
+
 	for (size_t i = 0; i < map->capacity; i++) {
 		ac_memzero(&map->entries[i], sizeof(ac_map_entry));
 	}
@@ -188,12 +193,12 @@ void ac_map_destroy(ac_map* map) {
 	for (size_t i = 0; i < map->capacity; i++) {
 		ac_map_entry* entry = &map->entries[i];
 		if (entry->life == AC_MAP_ENTRY_LIFE_ALIVE) {
-			ac_free(entry->key);
-			ac_free(entry->value);
+			map->map_free(entry->key);
+			map->map_free(entry->value);
 		}
 	}
-	ac_free(map->entries);
-	ac_free(map);
+	map->map_free(map->entries);
+	map->map_free(map);
 }
 
 
@@ -205,15 +210,15 @@ void ac_map_insert(ac_map* map, const char* key, void* value) {
 			break;
 		}
 		if (strcmp(map->entries[hash].key, key) == 0) {
-			ac_free(map->entries[hash].key);
-			ac_free(map->entries[hash].value);
+			map->map_free(map->entries[hash].key);
+			map->map_free(map->entries[hash].value);
 			break;
 		}
 		hash = (hash + 1) % map->capacity;
 	} while (1);
-	map->entries[hash].key = ac_malloc(strlen(key) + 1, map->entry_type);
+	map->entries[hash].key = map->map_malloc(strlen(key) + 1, map->entry_type);
 	strcpy(map->entries[hash].key, key);
-	map->entries[hash].value = ac_malloc(map->elem_size, map->entry_type);
+	map->entries[hash].value = map->map_malloc(map->elem_size, map->entry_type);
 	memcpy(map->entries[hash].value, value, map->elem_size);
 	map->entries[hash].life = AC_MAP_ENTRY_LIFE_ALIVE;
 	map->size++;
@@ -234,8 +239,8 @@ void ac_map_remove(ac_map* map, const char* key) {
 	size_t hash = ac_map_hash(key, map->capacity);
 	while (map->entries[hash].key != NULL) {
 		if (strcmp(map->entries[hash].key, key) == 0) {
-			ac_free(map->entries[hash].key);
-			ac_free(map->entries[hash].value);
+			map->map_free(map->entries[hash].key);
+			map->map_free(map->entries[hash].value);
 			map->entries[hash].key = NULL;
 			map->entries[hash].value = NULL;
 			map->entries[hash].life = AC_MAP_ENTRY_LIFE_TOMBSTONE;
@@ -259,13 +264,13 @@ void ac_map_print(ac_map* map) {
 		switch (entry.life) {
 			case AC_MAP_ENTRY_LIFE_EMPTY:
 				life_str = "EMPTY";
-				break;
+			break;
 			case AC_MAP_ENTRY_LIFE_ALIVE:
 				life_str = "ALIVE";
-				break;
+			break;
 			case AC_MAP_ENTRY_LIFE_TOMBSTONE:
 				life_str = "TOMB";
-				break;
+			break;
 		}
 		if (entry.key == NULL) {
 			printf("|%10s|%3s|%6s|\n", "NULL", "n/a", life_str);
