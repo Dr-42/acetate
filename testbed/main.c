@@ -12,45 +12,74 @@ void segfaulter(int sig) {
 	exit(1);
 }
 
+void* int_copy(void* value) {
+	int* val = (int*)value;
+	int* new_val = (int*)ac_malloc(sizeof(int), AC_MEM_ENTRY_CORE);
+	*new_val = *val;
+	return new_val;
+}
+
+void int_free(void* value) {
+	ac_free(value);
+}
+
+int int_display(void* value, char* buffer, size_t size) {
+	int* val = (int*)value;
+	return snprintf(buffer, size, "%d", *val);
+}
+
 int main() {
-	printf("Hello, World!\n");
 	signal(SIGSEGV, segfaulter);
-	ac_map_t* map = ac_map_create(sizeof(int), AC_MEM_ENTRY_CORE);
+	ac_map_value_ops_t value_ops = {
+		.copy = int_copy,
+		.free = int_free,
+		.display = int_display
+	};
+
+	ac_map_t* map = ac_map_new_strmap(value_ops, AC_MEM_ENTRY_CORE);
 	ac_map_print(map);
-	
-	int vals[17] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-					11, 12, 13, 14, 15, 100, 123};
-
-	ac_map_insert(map, "one", &vals[0]);
-	ac_map_insert(map, "two", &vals[1]);
-	ac_map_insert(map, "three", &vals[2]);
-
-	ac_map_print(map);
-
-	ac_map_remove(map, "two");
-	ac_map_print(map);
-
-	ac_map_insert(map, "four", &vals[3]);
-	ac_map_insert(map, "five", &vals[4]);
-	ac_map_insert(map, "six", &vals[5]);
-	ac_map_insert(map, "seven", &vals[6]);
-	ac_map_insert(map, "eight", &vals[7]);
-	ac_map_insert(map, "nine", &vals[8]);
-	ac_map_insert(map, "ten", &vals[9]);
-	ac_map_insert(map, "eleven", &vals[10]);
-	ac_map_insert(map, "twelve", &vals[11]);
-	ac_map_insert(map, "thirteen", &vals[12]);
-	ac_map_insert(map, "fourteen", &vals[13]);
-	ac_map_insert(map, "fifteen", &vals[14]);
 
 	ac_map_print(map);
 
-	ac_map_insert(map, "one", &vals[15]);
-	ac_map_insert(map, "twelve", &vals[16]);
+	int nums[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 30, 80};
+
+	ac_map_set(map, "one", &nums[0]);
+	ac_map_set(map, "two", &nums[1]);
+	ac_map_set(map, "three", &nums[2]);
+
+	ac_map_print(map);
+
+	ac_map_set(map, "one", &nums[9]);
+	ac_map_set(map, "four", &nums[3]);
+	ac_map_set(map, "five", &nums[4]);
+	ac_map_set(map, "six", &nums[5]);
+	ac_map_set(map, "seven", &nums[6]);
+	ac_map_set(map, "eight", &nums[7]);
+	ac_map_set(map, "nine", &nums[8]);
+	ac_map_set(map, "ten", &nums[9]);
+	ac_map_set(map, "eleven", &nums[10]);
+	ac_map_set(map, "twelve", &nums[11]);
+	ac_map_set(map, "thirteen", &nums[12]);
+	ac_map_set(map, "fourteen", &nums[13]);
+	ac_map_set(map, "fifteen", &nums[14]);
+	ac_map_set(map, "sixteen", &nums[15]);
+
+	ac_map_print(map);
+
+	ac_map_remove(map, "three");
+	ac_map_remove(map, "eight");
+
+	ac_map_print(map);
+
+	ac_map_set(map, "seventeen", &nums[16]);
+	ac_map_set(map, "two", &nums[18]);
+	ac_map_set(map, "three", &nums[19]);
+	ac_map_set(map, "eight", &nums[20]);
 
 	ac_map_print(map);
 
 	ac_map_destroy(map);
+
 	ac_mem_exit();
 	return 0;
 }
