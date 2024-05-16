@@ -2,24 +2,25 @@
 #define ACETATE_CORE_LOG_H
 
 /**
-* @file ac_log.h
-* @brief Logging functions.
-*/
+ * @file ac_log.h
+ * @brief Logging functions.
+ */
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 /// Log levels.
 /// The log level determines the severity of a log message.
 /// Log messages with a level lower than the set level will be ignored.
 /// Default log level is INFO.
 typedef enum ac_log_level_t {
-	AC_LOG_LEVEL_TRACE,
-	AC_LOG_LEVEL_DEBUG,
-	AC_LOG_LEVEL_INFO,
-	AC_LOG_LEVEL_WARN,
-	AC_LOG_LEVEL_ERROR,
-	AC_LOG_LEVEL_FATAL
+    AC_LOG_LEVEL_TRACE,
+    AC_LOG_LEVEL_DEBUG,
+    AC_LOG_LEVEL_INFO,
+    AC_LOG_LEVEL_WARN,
+    AC_LOG_LEVEL_ERROR,
+    AC_LOG_LEVEL_FATAL
 } ac_log_level_t;
 
 /// Whether to use ANSI color codes in log output.
@@ -78,5 +79,9 @@ void ac_log(FILE *fd, ac_log_level_t level, const char *fmt, ...);
 /// @param fmt The format string.
 /// @param ... The format arguments.
 /// @see ac_log_fatal
-#define ac_log_fatal_exit(fmt, ...) do { ac_log(stderr, AC_LOG_LEVEL_FATAL, fmt, ##__VA_ARGS__); exit(1); } while (0)
-#endif // ACETATE_CORE_LOG_H
+#define ac_log_fatal_exit(fmt, ...)                             \
+    do {                                                        \
+        ac_log(stderr, AC_LOG_LEVEL_FATAL, fmt, ##__VA_ARGS__); \
+        exit(1);                                                \
+    } while (0)
+#endif  // ACETATE_CORE_LOG_H

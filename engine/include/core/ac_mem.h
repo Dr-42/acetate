@@ -112,6 +112,9 @@ typedef enum ac_mem_entry_state_t {
 typedef enum ac_mem_entry_type_t {
     AC_MEM_ENTRY_CORE,
     AC_MEM_ENTRY_DS,
+    AC_MEM_ENTRY_INTERFACE,
+    AC_MEM_ENTRY_RENDERER,
+    AC_MEM_ENTRY_VULKAN,
 } ac_mem_entry_type_t;
 
 /**
@@ -224,8 +227,7 @@ void *ac_realloc(void *ptr, size_t size, ac_mem_entry_type_t type);
  * @return A pointer to the reallocated memory block.
  * @see ac_reallocarray_t
  */
-void *ac_reallocarray(void *ptr, size_t nmemb, size_t size,
-                      ac_mem_entry_type_t type);
+void *ac_reallocarray(void *ptr, size_t nmemb, size_t size, ac_mem_entry_type_t type);
 
 /**
  * Memcpy function.

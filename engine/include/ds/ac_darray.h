@@ -51,8 +51,7 @@ void ac_darray_set_resize_factor(float factor);
  * @param mem_type The memory type of the array.
  * @return A pointer to the new dynamic array.
  */
-ac_darray_t* ac_darray_create(uint64_t element_size, uint64_t capacity,
-                              ac_mem_entry_type_t mem_type);
+ac_darray_t* ac_darray_create(uint64_t element_size, uint64_t capacity, ac_mem_entry_type_t mem_type);
 
 /**
  * @brief Destroy the dynamic array.
@@ -111,4 +110,5 @@ void ac_darray_set(ac_darray_t* darray, uint64_t index, void* element);
  * @param darray The dynamic array to clear.
  */
 void ac_darray_clear(ac_darray_t* darray);
+
 #endif  // ACETATE_DS_DARRAY_H
