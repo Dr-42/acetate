@@ -11,9 +11,9 @@ void segfaulter(int sig) {
     exit(1);
 }
 
-void* int_copy(void* value) {
+void* int_copy(void* value, ac_mem_entry_type_t entry_type) {
     int* val = (int*)value;
-    int* new_val = (int*)ac_malloc(sizeof(int), AC_MEM_ENTRY_CORE);
+    int* new_val = (int*)ac_malloc(sizeof(int), entry_type);
     *new_val = *val;
     return new_val;
 }

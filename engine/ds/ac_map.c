@@ -204,8 +204,8 @@ static size_t ac_map_str_hash(void* key) {
     return SIP64(k, kn, seed0, seed1);
 }
 
-static void* ac_map_str_cpy(void* key) {
-    void* new_key = ac_malloc(strlen((const char*)key) + 1, AC_MEM_ENTRY_DS);
+static void* ac_map_str_cpy(void* key, ac_mem_entry_type_t type) {
+    void* new_key = ac_malloc(strlen((const char*)key) + 1, type);
     strncpy((char*)new_key, (const char*)key, strlen((const char*)key) + 1);
     return new_key;
 }
@@ -291,8 +291,8 @@ void ac_map_set(ac_map_t* map, void* key, void* value) {
     size_t index = hash % map->capacity;
     ac_map_entry_t entry = map->entries[index];
     if (entry.key == NULL) {
-        map->entries[index].key = map->key_ops.copy(key);
-        map->entries[index].value = map->value_ops.copy(value);
+        map->entries[index].key = map->key_ops.copy(key, map->entry_type);
+        map->entries[index].value = map->value_ops.copy(value, map->entry_type);
         map->entries[index].hash = hash;
         map->size++;
         return;
@@ -300,14 +300,15 @@ void ac_map_set(ac_map_t* map, void* key, void* value) {
     do {
         if (map->key_ops.cmp(entry.key, key) == 0) {
             map->value_ops.free(entry.value);
-            map->entries[index].value = map->value_ops.copy(value);
+            map->entries[index].value =
+                map->value_ops.copy(value, map->entry_type);
             return;
         }
         index = (index + 1) % map->capacity;
         entry = map->entries[index];
     } while (entry.key != NULL);
-    map->entries[index].key = map->key_ops.copy(key);
-    map->entries[index].value = map->value_ops.copy(value);
+    map->entries[index].key = map->key_ops.copy(key, map->entry_type);
+    map->entries[index].value = map->value_ops.copy(value, map->entry_type);
     map->entries[index].hash = hash;
     map->size++;
 }

@@ -104,7 +104,7 @@ typedef struct ac_map_key_ops_t {
      * @return The copy of the key.
      * @see ac_map_new_custom
      */
-    void* (*copy)(void* key);
+    void* (*copy)(void* key, ac_mem_entry_type_t type);
     /**
      * Free function.
      * @param key The key.
@@ -134,7 +134,7 @@ typedef struct ac_map_value_ops_t {
      * @see ac_map_new_custom
      * @see ac_map_new_strmap
      */
-    void* (*copy)(void* value);
+    void* (*copy)(void* value, ac_mem_entry_type_t type);
     /**
      * Free function.
      * @param value The value.
