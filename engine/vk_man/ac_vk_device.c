@@ -1,7 +1,5 @@
 #include "vk_man/ac_vk_device.h"
 
-#include "vk_man/ac_vulkan.h"
-
 #include <stdint.h>
 #include <vulkan/vk_enum_string_helper.h>
 #include <vulkan/vulkan.h>
