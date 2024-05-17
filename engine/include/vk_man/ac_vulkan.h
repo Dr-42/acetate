@@ -8,8 +8,9 @@ struct SDL_Window;
 
 typedef struct ac_vk_data {
     bool enable_validation_layers;
+    struct SDL_Window* window;
     VkInstance instance;
-    VkDebugUtilsMessengerEXT debug_messenger;
+    VkDebugUtilsMessengerEXT* debug_messenger;
     VkPhysicalDevice physical_device;
     VkDevice device;
     VkQueue graphics_queue;

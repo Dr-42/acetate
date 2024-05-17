@@ -3,7 +3,7 @@
 
 #include "core/ac_log.h"
 
-static ac_log_level_t ac_log_level = AC_LOG_LEVEL_DEBUG;
+static ac_log_level_t ac_log_level = AC_LOG_LEVEL_TRACE;
 static bool ac_log_color = true;
 
 static const char *ac_log_level_colors[] = {
