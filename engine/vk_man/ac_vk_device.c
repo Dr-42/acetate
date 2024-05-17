@@ -56,7 +56,7 @@ VkInstance create_instance(const char* app_name, ac_vk_device_data* vk_device_da
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.pEngineName = "Acetate Engine";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = VK_API_VERSION_1_0;
+    appInfo.apiVersion = VK_API_VERSION_1_3;
 
     VkInstanceCreateInfo createInfo = {0};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -224,14 +224,30 @@ void create_logical_device(ac_vk_device_data* vk_device_data) {
 
     ac_log_debug("Unique queue families: %zu\n", unique_queue_families->size);
 
+    VkPhysicalDeviceVulkan13Features vulkan_13_features = {0};
+    vulkan_13_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+    vulkan_13_features.dynamicRendering = VK_TRUE;
+    vulkan_13_features.synchronization2 = VK_TRUE;
+
+    VkPhysicalDeviceVulkan12Features vulkan_12_features = {0};
+    vulkan_12_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+    vulkan_12_features.bufferDeviceAddress = VK_TRUE;
+    vulkan_12_features.descriptorIndexing = VK_TRUE;
+    vulkan_12_features.pNext = &vulkan_13_features;
+
     VkPhysicalDeviceFeatures device_features = {0};
     device_features.samplerAnisotropy = VK_TRUE;
+
+    VkPhysicalDeviceFeatures2 device_features_2 = {0};
+    device_features_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    device_features_2.pNext = &vulkan_12_features;
+    device_features_2.features = device_features;
 
     VkDeviceCreateInfo create_info = {0};
     create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     create_info.pQueueCreateInfos = (VkDeviceQueueCreateInfo*)queue_create_infos->data;
     create_info.queueCreateInfoCount = queue_create_infos->size;
-    create_info.pEnabledFeatures = &device_features;
+    create_info.pNext = &device_features_2;
 
     if (!check_device_extension_support(vk_device_data->physical_device, device_extensions, ARRAY_SIZE(device_extensions))) {
         ac_log_fatal_exit("Device does not support required extensions\n");

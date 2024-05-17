@@ -2,10 +2,6 @@
 
 #include "core/ac_mem.h"
 
-void init_vulkan(ac_vk_data* vk_data, const char* app_name, bool enable_validation_layers, struct SDL_Window* window) {
-    vk_data->device_data = init_vk_device(app_name, enable_validation_layers, window);
-}
-
 void init_swapchain() {}
 void init_command() {}
 void init_sync() {}
@@ -13,7 +9,7 @@ void init_sync() {}
 ac_vk_data* ac_vk_init(const char* app_name, bool enable_validation_layers, struct SDL_Window* window) {
     ac_vk_data* vk_data = ac_malloc(sizeof(ac_vk_data), AC_MEM_ENTRY_VULKAN);
 
-    init_vulkan(vk_data, app_name, enable_validation_layers, window);
+    vk_data->device_data = init_vk_device(app_name, enable_validation_layers, window);
     init_swapchain();
     init_command();
     init_sync();
