@@ -14,6 +14,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <vulkan/vulkan_core.h>
 
 #define VK_CHECK(x)                                           \
     do {                                                      \
@@ -25,22 +26,26 @@
         }                                                     \
     } while (0)
 
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
+
 static const char* validation_layers[] = {"VK_LAYER_KHRONOS_validation"};
-size_t validation_layers_count = sizeof(validation_layers) / sizeof(validation_layers[0]);
+static const char* device_extensions[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
 VkInstance create_instance(const char* app_name, ac_vk_data* vk_data);
 VkSurfaceKHR create_surface(ac_vk_data* vk_data);
 void setup_debug_messenger(ac_vk_data* vk_data);
+void create_physical_device(ac_vk_data* vk_data);
 
 void init_vulkan(const char* app_name, ac_vk_data* vk_data) {
     vk_data->instance = create_instance(app_name, vk_data);
     vk_data->surface = create_surface(vk_data);
     setup_debug_messenger(vk_data);
+    create_physical_device(vk_data);
 }
 
 VkInstance create_instance(const char* app_name, ac_vk_data* vk_data) {
     if (vk_data->enable_validation_layers) {
-        if (!check_validation_layer_support(validation_layers, validation_layers_count)) {
+        if (!check_validation_layer_support(validation_layers, ARRAY_SIZE(validation_layers))) {
             ac_log_fatal_exit("Validation layers requested, but not available!\n");
         }
     }
@@ -71,7 +76,7 @@ VkInstance create_instance(const char* app_name, ac_vk_data* vk_data) {
     createInfo.ppEnabledExtensionNames = (const char**)extensions_arr;
     VkDebugUtilsMessengerCreateInfoEXT* debugCreateInfo = NULL;
     if (vk_data->enable_validation_layers) {
-        createInfo.enabledLayerCount = validation_layers_count;
+        createInfo.enabledLayerCount = ARRAY_SIZE(validation_layers);
         createInfo.ppEnabledLayerNames = validation_layers;
         debugCreateInfo = init_debug_messenger_create_info();
         createInfo.pNext = debugCreateInfo;
@@ -123,6 +128,65 @@ void setup_debug_messenger(ac_vk_data* vk_data) {
     VK_CHECK(result);
     ac_log_info("Debug messenger created\n");
     ac_free(createInfo);
+}
+
+void create_physical_device(ac_vk_data* vk_data) {
+    uint32_t device_count = 0;
+    vkEnumeratePhysicalDevices(vk_data->instance, &device_count, NULL);
+    if (device_count == 0) {
+        ac_log_fatal_exit("Failed to find GPUs with Vulkan support\n");
+    }
+
+    ac_darray_t* devices = ac_darray_create(sizeof(VkPhysicalDevice), device_count, AC_MEM_ENTRY_VULKAN);
+    vkEnumeratePhysicalDevices(vk_data->instance, &device_count, (VkPhysicalDevice*)devices->data);
+    devices->size = device_count;
+    for (size_t i = 0; i < devices->size; i++) {
+        VkPhysicalDevice device;
+        ac_darray_get(devices, i, &device);
+        VkPhysicalDeviceProperties properties;
+        VkPhysicalDeviceFeatures features;
+
+        vkGetPhysicalDeviceProperties(device, &properties);
+        vkGetPhysicalDeviceFeatures(device, &features);
+
+        ac_log_info("Checking device: %s\n", properties.deviceName);
+
+        if (properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+            ac_log_debug("Device is not a discrete GPU\n");
+            continue;
+        }
+
+        if (!features.samplerAnisotropy) {
+            ac_log_debug("Device does not support geometry shaders\n");
+            continue;
+        }
+
+        queue_family_indices_t indicies = {0};
+        find_queue_families(&device, &indicies, &vk_data->surface);
+
+        if (!indicies.found_graphics_family || !indicies.found_present_family || !indicies.found_transfer_family) {
+            ac_log_debug("Device does not support required queue families\n");
+            continue;
+        }
+
+        bool extensions_supported = check_device_extension_support(device, device_extensions, ARRAY_SIZE(device_extensions));
+        if (!extensions_supported) {
+            ac_log_debug("Device does not support required extensions\n");
+            continue;
+        }
+
+        bool swapchain_adequate = check_swapchain_adequete(device, &vk_data->surface);
+        if (!swapchain_adequate) {
+            ac_log_debug("Device does not support required swapchain\n");
+            continue;
+        }
+
+        ac_log_info("Suitable Device found: %s\n", properties.deviceName);
+        vk_data->physical_device = device;
+        ac_darray_destroy(devices);
+        return;
+    }
+    ac_log_fatal_exit("Failed to find suitable GPU\n");
 }
 
 void init_swapchain() {}

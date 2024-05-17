@@ -2,6 +2,7 @@
 
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_vulkan.h>
+#include <stdint.h>
 #include <vulkan/vulkan.h>
 
 #include "core/ac_mem.h"
@@ -108,4 +109,84 @@ VkDebugUtilsMessengerCreateInfoEXT* init_debug_messenger_create_info() {
     VkDebugUtilsMessengerCreateInfoEXT* createInfoPtr = ac_malloc(sizeof(VkDebugUtilsMessengerCreateInfoEXT), AC_MEM_ENTRY_VULKAN);
     memcpy(createInfoPtr, &createInfo, sizeof(VkDebugUtilsMessengerCreateInfoEXT));
     return createInfoPtr;
+}
+
+void find_queue_families(VkPhysicalDevice* physical_device, queue_family_indices_t* indices, VkSurfaceKHR* surface) {
+    uint32_t queue_family_count = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(*physical_device, &queue_family_count, NULL);
+    ac_darray_t* queue_families = ac_darray_create(sizeof(VkQueueFamilyProperties), queue_family_count, AC_MEM_ENTRY_VULKAN);
+    vkGetPhysicalDeviceQueueFamilyProperties(*physical_device, &queue_family_count, queue_families->data);
+    queue_families->size = queue_family_count;
+    for (uint32_t i = 0; i < queue_family_count; i++) {
+        VkQueueFamilyProperties queue_properties = {0};
+        ac_darray_get(queue_families, i, &queue_properties);
+        if (queue_properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+            indices->graphics_family = i;
+            indices->found_graphics_family = true;
+        }
+        VkBool32 present_support = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(*physical_device, i, *surface, &present_support);
+        if (present_support) {
+            indices->present_family = i;
+            indices->found_present_family = true;
+        }
+        if (queue_properties.queueFlags & VK_QUEUE_TRANSFER_BIT) {
+            indices->transfer_family = i;
+            indices->found_transfer_family = true;
+        }
+        if (indices->found_graphics_family && indices->found_present_family && indices->found_transfer_family) {
+            break;
+        }
+    }
+    ac_darray_destroy(queue_families);
+}
+
+bool check_device_extension_support(VkPhysicalDevice device, const char** required_extensions, size_t required_extensions_count) {
+    uint32_t extension_count;
+    vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, NULL);
+    ac_darray_t* available_extensions = ac_darray_create(sizeof(VkExtensionProperties), extension_count, AC_MEM_ENTRY_VULKAN);
+    vkEnumerateDeviceExtensionProperties(device, NULL, &extension_count, available_extensions->data);
+    available_extensions->size = extension_count;
+
+    for (size_t i = 0; i < required_extensions_count; i++) {
+        ac_log_info("Checking for extension: %s\n", required_extensions[i]);
+        bool extension_found = false;
+        const char* required_extension = required_extensions[i];
+        for (size_t j = 0; j < available_extensions->size; j++) {
+            VkExtensionProperties extension_properties = ((VkExtensionProperties*)available_extensions->data)[j];
+            if (strcmp(required_extension, extension_properties.extensionName) == 0) {
+                extension_found = true;
+                break;
+            }
+        }
+        if (!extension_found) {
+            ac_darray_destroy(available_extensions);
+            return false;
+        }
+    }
+    ac_darray_destroy(available_extensions);
+    return true;
+}
+
+bool check_swapchain_adequete(VkPhysicalDevice device, VkSurfaceKHR* surface) {
+    VkSurfaceCapabilitiesKHR capabilities;
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, *surface, &capabilities);
+    uint32_t format_count;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(device, *surface, &format_count, NULL);
+    ac_darray_t* formats = ac_darray_create(sizeof(VkSurfaceFormatKHR), format_count, AC_MEM_ENTRY_VULKAN);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(device, *surface, &format_count, formats->data);
+    formats->size = format_count;
+    uint32_t present_mode_count;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(device, *surface, &present_mode_count, NULL);
+    ac_darray_t* present_modes = ac_darray_create(sizeof(VkPresentModeKHR), present_mode_count, AC_MEM_ENTRY_VULKAN);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(device, *surface, &present_mode_count, present_modes->data);
+    present_modes->size = present_mode_count;
+    if (formats->size == 0 || present_modes->size == 0) {
+        ac_darray_destroy(formats);
+        ac_darray_destroy(present_modes);
+        return false;
+    }
+    ac_darray_destroy(formats);
+    ac_darray_destroy(present_modes);
+    return true;
 }
