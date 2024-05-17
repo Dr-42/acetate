@@ -65,14 +65,16 @@ static void* ac_mem_entry_copy(const void* value, ac_mem_entry_type_t type) {
     ac_mem_entry_t* copy = ac_malloc_func(sizeof(ac_mem_entry_t));
     memcpy(copy, entry, sizeof(ac_mem_entry_t));
 
-    copy->alloc_trace = ac_malloc_func(ALLOC_TRACE_SIZE * sizeof(void*));
-    memcpy(copy->alloc_trace, entry->alloc_trace, ALLOC_TRACE_SIZE * sizeof(void*));
+    copy->alloc_trace = ac_malloc_func(entry->alloc_trace_size * sizeof(void*));
+    memcpy(copy->alloc_trace, entry->alloc_trace, entry->alloc_trace_size * sizeof(void*));
+    copy->alloc_trace_size = entry->alloc_trace_size;
 
     if (entry->free_trace == NULL) {
         copy->free_trace = NULL;
     } else {
-        copy->free_trace = ac_malloc_func(ALLOC_TRACE_SIZE * sizeof(void*));
-        memcpy(copy->free_trace, entry->free_trace, ALLOC_TRACE_SIZE * sizeof(void*));
+        copy->free_trace = ac_malloc_func(entry->free_trace_size * sizeof(void*));
+        memcpy(copy->free_trace, entry->free_trace, entry->free_trace_size * sizeof(void*));
+        copy->free_trace_size = entry->free_trace_size;
     }
 
     if (entry->realloc_traces == NULL) {
@@ -185,8 +187,10 @@ void* ac_malloc(size_t size, ac_mem_entry_type_t type) {
     entry.state = AC_MEM_ENTRY_STATE_ALLOCATED;
     entry.type = type;
 
-    entry.alloc_trace = ac_malloc_func(ALLOC_TRACE_SIZE * sizeof(void*));
-    entry.alloc_trace_size = ac_get_intermediate_trace(entry.alloc_trace, ALLOC_TRACE_SIZE);
+    void* trace[ALLOC_TRACE_SIZE];
+    entry.alloc_trace_size = ac_get_intermediate_trace(trace, ALLOC_TRACE_SIZE);
+    entry.alloc_trace = ac_malloc_func(entry.alloc_trace_size * sizeof(void*));
+    memcpy(entry.alloc_trace, trace, entry.alloc_trace_size * sizeof(void*));
     entry.free_trace = NULL;
     entry.free_trace_size = 0;
     entry.realloc_traces = NULL;
@@ -244,8 +248,10 @@ void ac_free(void* ptr) {
             return;
         }
         entry->state = AC_MEM_ENTRY_STATE_FREED;
-        entry->free_trace = ac_malloc_func(ALLOC_TRACE_SIZE * sizeof(void*));
-        entry->free_trace_size = ac_get_intermediate_trace(entry->free_trace, ALLOC_TRACE_SIZE);
+        void* trace[ALLOC_TRACE_SIZE];
+        entry->free_trace_size = ac_get_intermediate_trace(trace, ALLOC_TRACE_SIZE);
+        entry->free_trace = ac_malloc_func(entry->free_trace_size * sizeof(void*));
+        memcpy(entry->free_trace, trace, entry->free_trace_size * sizeof(void*));
         ac_free_func(ptr);
         ac_map_set(ac_mem_map, ptr, entry);
         ac_mem_entry_free(entry);
@@ -269,8 +275,10 @@ void* ac_calloc(size_t nmemb, size_t size, ac_mem_entry_type_t type) {
     entry.state = AC_MEM_ENTRY_STATE_ALLOCATED;
     entry.type = type;
 
-    entry.alloc_trace = ac_malloc_func(ALLOC_TRACE_SIZE * sizeof(void*));
-    entry.alloc_trace_size = ac_get_intermediate_trace(entry.alloc_trace, ALLOC_TRACE_SIZE);
+    void* trace[ALLOC_TRACE_SIZE];
+    entry.alloc_trace_size = ac_get_intermediate_trace(trace, ALLOC_TRACE_SIZE);
+    entry.alloc_trace = ac_malloc_func(entry.alloc_trace_size * sizeof(void*));
+    memcpy(entry.alloc_trace, trace, entry.alloc_trace_size * sizeof(void*));
     entry.free_trace = NULL;
     entry.free_trace_size = 0;
     entry.realloc_traces = NULL;
