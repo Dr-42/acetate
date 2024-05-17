@@ -163,7 +163,7 @@ typedef struct ac_mem_entry_t {
     /**
      * The stack traces of the reallocation, its a darray
      */
-    void ***realloc_traces;
+    void **realloc_traces;
     /**
      * size of the realloc_traces darray
      */
@@ -176,7 +176,21 @@ typedef struct ac_mem_entry_t {
      * The sizes of the reallocated memory blocks.
      */
     int32_t *realloc_trace_sizes;
+    /**
+     * The number of reallocations.
+     */
+    int32_t realloc_count;
+    /**
+     * The capacity of the realloc_trace_sizes darray
+     */
+    int32_t realloc_trace_sizes_capacity;
 } ac_mem_entry_t;
+
+/**
+ * Initialize memory management.
+ * This function should be called at the beginning of the program.
+ */
+void ac_mem_init(void);
 
 /**
  * Malloc function.

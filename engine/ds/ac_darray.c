@@ -2,7 +2,6 @@
 
 #include "core/ac_mem.h"
 
-#include <string.h>
 #include <math.h>
 
 static float AC_DARRAY_RESIZE_FACTOR = 1.6f;

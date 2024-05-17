@@ -15,6 +15,7 @@ void segfaulter(int sig) {
 
 int main() {
     signal(SIGSEGV, segfaulter);
+    ac_mem_init();
     ac_window_settings_t settings = {
         .width = 800,
         .height = 600,
@@ -37,7 +38,6 @@ int main() {
 
     ac_vk_cleanup(vk_data);
     ac_window_shutdown(window, NULL, NULL);
-
     ac_mem_exit();
     return 0;
 }

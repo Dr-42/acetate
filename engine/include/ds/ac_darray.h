@@ -62,48 +62,49 @@ void ac_darray_destroy(ac_darray_t* darray);
 /**
  * @brief Push an element to the dynamic array.
  * @param darray The dynamic array.
- * @param element The element to push.
+ * @param element_ptr The pointer to the element to push.
  */
-void ac_darray_push(ac_darray_t* darray, void* element);
+void ac_darray_push(ac_darray_t* darray, void* element_ptr);
 
 /**
  * @brief Pop an element from the dynamic array.
  * @param darray The dynamic array.
- * @param element The element to pop.
+ * @param dest The destination pointer for the element to pop. There needs to be adequeste memeory allocated.
  */
-void ac_darray_pop(ac_darray_t* darray, void* element);
+void ac_darray_pop(ac_darray_t* darray, void* dest);
 
 /**
  * @brief Insert an element to the dynamic array.
  * @param darray The dynamic array.
  * @param index The index to insert the element.
- * @param element The element to insert.
+ * @param element_ptr The pointer to the element to insert.
  */
-void ac_darray_insert(ac_darray_t* darray, uint64_t index, void* element);
+void ac_darray_insert(ac_darray_t* darray, uint64_t index, void* element_ptr);
 
 /**
  * @brief Remove an element from the dynamic array.
  * @param darray The dynamic array.
  * @param index The index to remove the element.
- * @param element The element to remove.
+ * @param dest The destination pointer for the element to remove. There needs to be adequeste memeory allocated. Can be null to
+ * ignore.
  */
-void ac_darray_remove(ac_darray_t* darray, uint64_t index, void* element);
+void ac_darray_remove(ac_darray_t* darray, uint64_t index, void* dest);
 
 /**
  * @brief Get an element from the dynamic array.
  * @param darray The dynamic array.
  * @param index The index to get the element.
- * @param element The element to get.
+ * @param element_ptr The pointer to the element to get. There needs to be adequeste memeory allocated.
  */
-void ac_darray_get(ac_darray_t* darray, uint64_t index, void* element);
+void ac_darray_get(ac_darray_t* darray, uint64_t index, void* element_ptr);
 
 /**
  * @brief Set an element in the dynamic array.
  * @param darray The dynamic array.
  * @param index The index to set the element.
- * @param element The element to set.
+ * @param element_ptr The pointer to the element to set.
  */
-void ac_darray_set(ac_darray_t* darray, uint64_t index, void* element);
+void ac_darray_set(ac_darray_t* darray, uint64_t index, void* element_ptr);
 
 /**
  * @brief Clear the dynamic array.

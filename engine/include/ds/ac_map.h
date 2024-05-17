@@ -90,21 +90,21 @@ typedef struct ac_map_key_ops_t {
      * than element2, positive if element1 is greater than element2.
      * @see ac_map_new_custom
      */
-    int (*cmp)(void* element1, void* element2);
+    int (*cmp)(const void* element1, const void* element2);
     /**
      * Hash function.
      * @param key The key.
      * @return The hash of the key.
      * @see ac_map_new_custom
      */
-    size_t (*hash)(void* key);
+    size_t (*hash)(const void* key);
     /**
      * Copy function.
      * @param key The key.
      * @return The copy of the key.
      * @see ac_map_new_custom
      */
-    void* (*copy)(void* key, ac_mem_entry_type_t type);
+    void* (*copy)(const void* key, ac_mem_entry_type_t type);
     /**
      * Free function.
      * @param key The key.
@@ -119,7 +119,7 @@ typedef struct ac_map_key_ops_t {
      * @return The number of characters printed.
      * @see ac_map_new_custom
      */
-    int (*display)(void* key, char* buffer, size_t size);
+    int (*display)(const void* key, char* buffer, size_t size);
 } ac_map_key_ops_t;
 
 /**
@@ -134,7 +134,7 @@ typedef struct ac_map_value_ops_t {
      * @see ac_map_new_custom
      * @see ac_map_new_strmap
      */
-    void* (*copy)(void* value, ac_mem_entry_type_t type);
+    void* (*copy)(const void* value, ac_mem_entry_type_t type);
     /**
      * Free function.
      * @param value The value.
@@ -151,7 +151,7 @@ typedef struct ac_map_value_ops_t {
      * @see ac_map_new_custom
      * @see ac_map_new_strmap
      */
-    int (*display)(void* value, char* buffer, size_t size);
+    int (*display)(const void* value, char* buffer, size_t size);
 } ac_map_value_ops_t;
 
 /**
@@ -202,8 +202,7 @@ typedef struct ac_map_t {
  * @param entry_type The memory entry type.
  * @return The pointer to the new hash map.
  */
-ac_map_t* ac_map_new_strmap(ac_map_value_ops_t value_ops,
-                            ac_mem_entry_type_t entry_type);
+ac_map_t* ac_map_new_strmap(ac_map_value_ops_t value_ops, ac_mem_entry_type_t entry_type);
 
 /**
  * @brief Create a new hash map with custom parameters.
@@ -214,8 +213,7 @@ ac_map_t* ac_map_new_strmap(ac_map_value_ops_t value_ops,
  * @param value_ops The value operations.
  * @return The pointer to the new hash map.
  */
-ac_map_t* ac_map_new_custom(size_t capacity, ac_mem_entry_type_t entry_type,
-                            ac_map_mem_ops_t mem_ops, ac_map_key_ops_t key_ops,
+ac_map_t* ac_map_new_custom(size_t capacity, ac_mem_entry_type_t entry_type, ac_map_mem_ops_t mem_ops, ac_map_key_ops_t key_ops,
                             ac_map_value_ops_t value_ops);
 
 /**
@@ -281,6 +279,16 @@ void ac_map_print(ac_map_t* map);
  * The callback function should have the following signature:
  * void callback(void* key, void* value);
  */
-void ac_map_iter(ac_map_t* map, void (*callback)(void* key, void* value));
+void ac_map_iter(ac_map_t* map, void (*callback)(const void* key, const void* value));
 
+/**
+ * SIP hash function.
+ * Provided so that the hash function can be used in other modules.
+ * @param in The input data.
+ * @param inlen The length of the input data.
+ * @param seed0 The first seed.
+ * @param seed1 The second seed.
+ * @return The hash of the input data.
+ */
+uint64_t SIP64(const uint8_t* in, const size_t inlen, uint64_t seed0, uint64_t seed1);
 #endif  // AC_DS_DMAP_H

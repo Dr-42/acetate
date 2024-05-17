@@ -24,14 +24,11 @@
 //
 // default: SipHash-2-4
 //-----------------------------------------------------------------------------
-static uint64_t SIP64(const uint8_t* in, const size_t inlen, uint64_t seed0,
-                      uint64_t seed1) {
-#define U8TO64_LE(p)                                               \
-    {                                                              \
-        (((uint64_t)((p)[0])) | ((uint64_t)((p)[1]) << 8) |        \
-         ((uint64_t)((p)[2]) << 16) | ((uint64_t)((p)[3]) << 24) | \
-         ((uint64_t)((p)[4]) << 32) | ((uint64_t)((p)[5]) << 40) | \
-         ((uint64_t)((p)[6]) << 48) | ((uint64_t)((p)[7]) << 56))  \
+uint64_t SIP64(const uint8_t* in, const size_t inlen, uint64_t seed0, uint64_t seed1) {
+#define U8TO64_LE(p)                                                                                                        \
+    {                                                                                                                       \
+        (((uint64_t)((p)[0])) | ((uint64_t)((p)[1]) << 8) | ((uint64_t)((p)[2]) << 16) | ((uint64_t)((p)[3]) << 24) |       \
+         ((uint64_t)((p)[4]) << 32) | ((uint64_t)((p)[5]) << 40) | ((uint64_t)((p)[6]) << 48) | ((uint64_t)((p)[7]) << 56)) \
     }
 #define U64TO8_LE(p, v)                            \
     {                                              \
@@ -125,9 +122,7 @@ static size_t ac_map_default_capacity = 16;
 static size_t ac_map_min_capacity = 8;
 static float ac_map_grow_factor = 1.6f;
 
-static float load_factor(ac_map_t* map) {
-    return (float)map->size / (float)map->capacity;
-}
+static float load_factor(ac_map_t* map) { return (float)map->size / (float)map->capacity; }
 
 static void ac_map_grow(ac_map_t* map) {
     if (map->capacity >= (size_t)ceilf((float)SIZE_MAX / ac_map_grow_factor)) {
@@ -138,10 +133,8 @@ static void ac_map_grow(ac_map_t* map) {
     if (map_load_factor < grow_load_factor) {
         return;
     }
-    size_t new_capacity =
-        (size_t)ceilf((float)map->capacity * ac_map_grow_factor);
-    ac_map_entry_t* new_entries = (ac_map_entry_t*)map->mem_ops.map_calloc(
-        new_capacity, sizeof(ac_map_entry_t), map->entry_type);
+    size_t new_capacity = (size_t)ceilf((float)map->capacity * ac_map_grow_factor);
+    ac_map_entry_t* new_entries = (ac_map_entry_t*)map->mem_ops.map_calloc(new_capacity, sizeof(ac_map_entry_t), map->entry_type);
     for (size_t i = 0; i < map->capacity; i++) {
         ac_map_entry_t entry = map->entries[i];
         if (entry.key != NULL) {
@@ -168,10 +161,8 @@ static void ac_map_shrink(ac_map_t* map) {
     if (map_load_factor > shrink_load_factor) {
         return;
     }
-    size_t new_capacity =
-        (size_t)ceilf((float)map->capacity / ac_map_grow_factor);
-    ac_map_entry_t* new_entries = (ac_map_entry_t*)map->mem_ops.map_calloc(
-        new_capacity, sizeof(ac_map_entry_t), map->entry_type);
+    size_t new_capacity = (size_t)ceilf((float)map->capacity / ac_map_grow_factor);
+    ac_map_entry_t* new_entries = (ac_map_entry_t*)map->mem_ops.map_calloc(new_capacity, sizeof(ac_map_entry_t), map->entry_type);
     for (size_t i = 0; i < map->capacity; i++) {
         ac_map_entry_t entry = map->entries[i];
         if (entry.key != NULL) {
@@ -191,11 +182,11 @@ static void ac_map_shrink(ac_map_t* map) {
 }
 
 // String map setup
-static int ac_map_str_cmp(void* element1, void* element2) {
+static int ac_map_str_cmp(const void* element1, const void* element2) {
     return strcmp((const char*)element1, (const char*)element2);
 }
 
-static size_t ac_map_str_hash(void* key) {
+static size_t ac_map_str_hash(const void* key) {
     const uint8_t* k = key;
     const size_t kn = strlen(key);
     srand(time(NULL));
@@ -204,7 +195,7 @@ static size_t ac_map_str_hash(void* key) {
     return SIP64(k, kn, seed0, seed1);
 }
 
-static void* ac_map_str_cpy(void* key, ac_mem_entry_type_t type) {
+static void* ac_map_str_cpy(const void* key, ac_mem_entry_type_t type) {
     void* new_key = ac_malloc(strlen((const char*)key) + 1, type);
     strncpy((char*)new_key, (const char*)key, strlen((const char*)key) + 1);
     return new_key;
@@ -212,25 +203,19 @@ static void* ac_map_str_cpy(void* key, ac_mem_entry_type_t type) {
 
 static void ac_map_str_free(void* key) { ac_free(key); }
 
-static int ac_map_str_display(void* key, char* buffer, size_t size) {
-    return snprintf(buffer, size, "%s", (const char*)key);
-}
+static int ac_map_str_display(const void* key, char* buffer, size_t size) { return snprintf(buffer, size, "%s", (const char*)key); }
 
-ac_map_t* ac_map_new_strmap(ac_map_value_ops_t value_ops,
-                            ac_mem_entry_type_t entry_type) {
-    ac_map_mem_ops_t mem_ops = {
-        .map_malloc = ac_malloc, .map_free = ac_free, .map_calloc = ac_calloc};
+ac_map_t* ac_map_new_strmap(ac_map_value_ops_t value_ops, ac_mem_entry_type_t entry_type) {
+    ac_map_mem_ops_t mem_ops = {.map_malloc = ac_malloc, .map_free = ac_free, .map_calloc = ac_calloc};
     ac_map_key_ops_t key_ops = {.cmp = ac_map_str_cmp,
                                 .hash = ac_map_str_hash,
                                 .copy = ac_map_str_cpy,
                                 .free = ac_map_str_free,
                                 .display = ac_map_str_display};
-    return ac_map_new_custom(ac_map_default_capacity, entry_type, mem_ops,
-                             key_ops, value_ops);
+    return ac_map_new_custom(ac_map_default_capacity, entry_type, mem_ops, key_ops, value_ops);
 }
 
-ac_map_t* ac_map_new_custom(size_t capacity, ac_mem_entry_type_t entry_type,
-                            ac_map_mem_ops_t mem_ops, ac_map_key_ops_t key_ops,
+ac_map_t* ac_map_new_custom(size_t capacity, ac_mem_entry_type_t entry_type, ac_map_mem_ops_t mem_ops, ac_map_key_ops_t key_ops,
                             ac_map_value_ops_t value_ops) {
     ac_map_t* map = (ac_map_t*)mem_ops.map_malloc(sizeof(ac_map_t), entry_type);
     map->entry_type = entry_type;
@@ -239,8 +224,7 @@ ac_map_t* ac_map_new_custom(size_t capacity, ac_mem_entry_type_t entry_type,
     map->mem_ops = mem_ops;
     map->key_ops = key_ops;
     map->value_ops = value_ops;
-    map->entries = (ac_map_entry_t*)mem_ops.map_calloc(
-        capacity, sizeof(ac_map_entry_t), entry_type);
+    map->entries = (ac_map_entry_t*)mem_ops.map_calloc(capacity, sizeof(ac_map_entry_t), entry_type);
     return map;
 }
 
@@ -277,7 +261,7 @@ void* ac_map_get(ac_map_t* map, void* key) {
     }
     do {
         if (entry.key != NULL && map->key_ops.cmp(entry.key, key) == 0) {
-            return entry.value;
+            return map->value_ops.copy(entry.value, map->entry_type);
         }
         index = (index + 1) % map->capacity;
         entry = map->entries[index];
@@ -300,8 +284,7 @@ void ac_map_set(ac_map_t* map, void* key, void* value) {
     do {
         if (map->key_ops.cmp(entry.key, key) == 0) {
             map->value_ops.free(entry.value);
-            map->entries[index].value =
-                map->value_ops.copy(value, map->entry_type);
+            map->entries[index].value = map->value_ops.copy(value, map->entry_type);
             return;
         }
         index = (index + 1) % map->capacity;
@@ -347,15 +330,14 @@ void ac_map_print(ac_map_t* map) {
             char key_buffer[256];
             char value_buffer[256];
             map->key_ops.display(entry.key, key_buffer, sizeof(key_buffer));
-            map->value_ops.display(entry.value, value_buffer,
-                                   sizeof(value_buffer));
+            map->value_ops.display(entry.value, value_buffer, sizeof(value_buffer));
             ac_log_info("Key: %s, Value: %s\n", key_buffer, value_buffer);
         }
     }
     ac_log_info("\n");
 }
 
-void ac_map_iter(ac_map_t* map, void (*callback)(void* key, void* value)) {
+void ac_map_iter(ac_map_t* map, void (*callback)(const void* key, const void* value)) {
     for (size_t i = 0; i < map->capacity; i++) {
         ac_map_entry_t entry = map->entries[i];
         if (entry.key != NULL) {
