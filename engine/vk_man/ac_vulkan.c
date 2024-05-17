@@ -10,7 +10,7 @@ ac_vk_data* ac_vk_init(const char* app_name, bool enable_validation_layers, stru
     ac_vk_data* vk_data = ac_malloc(sizeof(ac_vk_data), AC_MEM_ENTRY_VULKAN);
 
     vk_data->device_data = init_vk_device(app_name, enable_validation_layers, window);
-    init_swapchain();
+    vk_data->swapchain_data = init_vk_swapchain(&vk_data->device_data);
     init_command();
     init_sync();
 
@@ -18,6 +18,7 @@ ac_vk_data* ac_vk_init(const char* app_name, bool enable_validation_layers, stru
 }
 
 void ac_vk_cleanup(ac_vk_data* vk_data) {
+    cleanup_vk_swapchain(&vk_data->swapchain_data, &vk_data->device_data);
     cleaup_vk_device(&vk_data->device_data);
     ac_free(vk_data);
 }
