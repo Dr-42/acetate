@@ -12,6 +12,8 @@ typedef struct ac_vk_device_data {
     VkPhysicalDevice physical_device;
     VkDevice device;
     VkSurfaceKHR surface;
+    VkQueue graphics_queue;
+    uint32_t graphics_queue_idx;
 } ac_vk_device_data;
 
 ac_vk_device_data init_vk_device(const char* app_name, bool enable_validation_layers, struct SDL_Window* window);

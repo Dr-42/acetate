@@ -255,6 +255,11 @@ void create_logical_device(ac_vk_device_data* vk_device_data) {
     VkResult result = vkCreateDevice(vk_device_data->physical_device, &create_info, NULL, &vk_device_data->device);
     VK_CHECK(result);
     ac_log_info("Logical device created\n");
+
+    vk_device_data->graphics_queue_idx = indicies.graphics_family;
+    vkGetDeviceQueue(vk_device_data->device, indicies.graphics_family, 0, &vk_device_data->graphics_queue);
+    ac_log_info("Graphics queue created\n");
+
     ac_darray_destroy(queue_create_infos);
     ac_darray_destroy(unique_queue_families);
 }
