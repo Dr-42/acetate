@@ -6,23 +6,13 @@
 
 #include "core/ac_mem.h"
 #include "core/ac_log.h"
-#include "core/ac_trace.h"
 #include "ds/ac_darray.h"
 #include "math/ac_math_common.h"
 #include "vk_man/utils/ac_vk_init.h"
 #include "vk_man/utils/ac_vk_render.h"
+#include "vk_man/utils/ac_vk_common.h"
 
 #include <stdlib.h>
-
-#define VK_CHECK(x)                                           \
-    do {                                                      \
-        VkResult err = x;                                     \
-        if (err) {                                            \
-            const char* err_str = string_VkResult(err);       \
-            ac_print_trace(3);                                \
-            ac_log_fatal_exit("Vulkan error: %s\n", err_str); \
-        }                                                     \
-    } while (0)
 
 typedef struct ac_vk_swapchain_support_details {
     VkSurfaceCapabilitiesKHR capabilities;

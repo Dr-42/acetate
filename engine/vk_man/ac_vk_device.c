@@ -9,25 +9,13 @@
 
 #include "core/ac_log.h"
 #include "ds/ac_string.h"
-#include "core/ac_trace.h"
 #include "ds/ac_darray.h"
+#include "vk_man/utils/ac_vk_common.h"
 #include "vk_man/utils/ac_vk_init.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <vulkan/vulkan_core.h>
-
-#define VK_CHECK(x)                                           \
-    do {                                                      \
-        VkResult err = x;                                     \
-        if (err) {                                            \
-            const char* err_str = string_VkResult(err);       \
-            ac_print_trace(3);                                \
-            ac_log_fatal_exit("Vulkan error: %s\n", err_str); \
-        }                                                     \
-    } while (0)
-
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
 static const char* validation_layers[] = {"VK_LAYER_KHRONOS_validation"};
 static const char* device_extensions[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};

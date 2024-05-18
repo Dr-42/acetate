@@ -11,8 +11,6 @@ typedef struct ac_vk_device_data {
     VkDebugUtilsMessengerEXT* debug_messenger;
     VkPhysicalDevice physical_device;
     VkDevice device;
-    VkQueue graphics_queue;
-    VkQueue present_queue;
     VkSurfaceKHR surface;
 } ac_vk_device_data;
 
