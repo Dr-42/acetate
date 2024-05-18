@@ -19,7 +19,7 @@ int main() {
     ac_window_settings_t settings = {
         .width = 800,
         .height = 600,
-        .title = "Hello, World!",
+        .title = "Hello, Vulkan!",
         .fullscreen = false,
         .resizable = true,
         .fps = 60,
@@ -30,13 +30,10 @@ int main() {
         ac_log_fatal_exit("Failed to initialize window\n");
     }
 
-    ac_vk_data* vk_data = ac_vk_init(settings.title, true, ac_window_get_sdl_window(window));
-
     while (ac_window_is_running(window)) {
         ac_window_update(window, NULL, NULL);
     }
 
-    ac_vk_cleanup(vk_data);
     ac_window_shutdown(window, NULL, NULL);
     ac_mem_exit();
     return 0;

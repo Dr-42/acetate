@@ -1,4 +1,5 @@
 #include "vk_man/utils/ac_vk_command.h"
+#include <vulkan/vulkan_core.h>
 
 #include "vk_man/utils/ac_vk_common.h"
 
@@ -32,3 +33,17 @@ VkCommandBuffer create_command_buffer(VkDevice device, VkCommandPool command_poo
 }
 
 void cleanup_command_pool(VkDevice device, VkCommandPool command_pool) { vkDestroyCommandPool(device, command_pool, NULL); }
+
+void begin_command_buffer(VkCommandBuffer command_buffer, VkCommandBufferUsageFlags flags) {
+    VkCommandBufferBeginInfo begin_info = {0};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags = flags;
+
+    VkResult res = vkBeginCommandBuffer(command_buffer, &begin_info);
+    VK_CHECK(res);
+}
+
+void end_command_buffer(VkCommandBuffer command_buffer) {
+    VkResult res = vkEndCommandBuffer(command_buffer);
+    VK_CHECK(res);
+}

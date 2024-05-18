@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <vulkan/vulkan.h>
+#include "vk_man/ac_vulkan.h"
 
 /**
  * @brief The settings for the window.

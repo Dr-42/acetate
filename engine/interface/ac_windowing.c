@@ -1,17 +1,19 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_vulkan.h>
+#include <stdio.h>
 
 #include "core/ac_mem.h"
 #include "core/ac_log.h"
+#include "vk_man/ac_vulkan.h"
 #include "interface/ac_windowing.h"
 
 typedef struct ac_window_t {
     ac_window_settings_t settings;
     SDL_Window* window;
-    bool initialized;
     bool running;
     bool is_minimized;
+    ac_vk_data* vk_data;
 } ac_window_t;
 
 ac_window_t* ac_window_init(ac_window_settings_t* settings) {
@@ -28,12 +30,14 @@ ac_window_t* ac_window_init(ac_window_settings_t* settings) {
         ac_log_fatal_exit("Failed to create window");
         return NULL;
     }
-    window->initialized = true;
+    window->vk_data = ac_vk_init(settings->title, true, ac_window_get_sdl_window(window));
+    window->running = true;
     return window;
 }
 
-void ac_window_draw() {
-    // This function is intentionally left blank
+void ac_window_draw(ac_vk_data* vk_data) {
+    ac_vk_draw_frame(vk_data);
+    // getchar();
 }
 
 void ac_window_update(ac_window_t* window, void (*update)(void* user_data), void* user_data) {
@@ -55,7 +59,7 @@ void ac_window_update(ac_window_t* window, void (*update)(void* user_data), void
         }
     }
     if (!window->is_minimized) {
-        ac_window_draw();
+        ac_window_draw(window->vk_data);
         if (update) update(user_data);
         if (window->settings.fps > 0) {
             uint32_t frame_time = 1000 / window->settings.fps;
@@ -68,7 +72,7 @@ void ac_window_update(ac_window_t* window, void (*update)(void* user_data), void
     }
 }
 void ac_window_shutdown(ac_window_t* window, void (*shutdown)(void* user_data), void* user_data) {
-    if (!window->initialized) return;
+    ac_vk_cleanup(window->vk_data);
     SDL_DestroyWindow(window->window);
     SDL_Quit();
     ac_free(window);

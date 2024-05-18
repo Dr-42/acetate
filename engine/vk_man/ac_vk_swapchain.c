@@ -119,7 +119,7 @@ ac_vk_swapchain_data init_vk_swapchain(ac_vk_device_data* vk_device_data) {
     create_info.imageColorSpace = surface_format.colorSpace;
     create_info.imageExtent = extent;
     create_info.imageArrayLayers = 1;
-    create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
     queue_family_indices_t indicies = {0};
     find_queue_families(&vk_device_data->physical_device, &indicies, &vk_device_data->surface);
