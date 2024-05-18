@@ -115,6 +115,7 @@ typedef enum ac_mem_entry_type_t {
     AC_MEM_ENTRY_INTERFACE,
     AC_MEM_ENTRY_RENDERER,
     AC_MEM_ENTRY_VULKAN,
+    AC_MEM_ENTRY_COUNT,
 } ac_mem_entry_type_t;
 
 /**
@@ -191,6 +192,11 @@ typedef struct ac_mem_entry_t {
  * This function should be called at the beginning of the program.
  */
 void ac_mem_init(void);
+
+/**
+ * Display usage
+ */
+void ac_mem_show_usage(void);
 
 /**
  * Malloc function.

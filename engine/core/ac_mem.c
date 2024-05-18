@@ -452,7 +452,7 @@ void* ac_reallocarray(void* ptr, size_t nmemb, size_t size, ac_mem_entry_type_t 
     return NULL;
 }
 
-void ac_mem_map_iter_cb(const void* key, const void* value) {
+void ac_mem_map_exit_iter_cb(const void* key, const void* value) {
     (void)key;
     ac_mem_entry_t* entry = (ac_mem_entry_t*)value;
     if (entry->state == AC_MEM_ENTRY_STATE_ALLOCATED) {
@@ -489,7 +489,7 @@ void ac_mem_exit(void) {
     if (!ac_mem_track) {
         return;
     }
-    ac_map_iter(ac_mem_map, ac_mem_map_iter_cb);
+    ac_map_iter(ac_mem_map, ac_mem_map_exit_iter_cb);
     ac_map_destroy(ac_mem_map);
 }
 
@@ -500,3 +500,47 @@ void ac_memmove(void* dest, const void* src, size_t n) { memmove(dest, src, n); 
 void ac_memset(void* s, int c, size_t n) { memset(s, c, n); }
 
 void ac_memzero(void* s, size_t n) { memset(s, 0, n); }
+
+static const char* mem_entry_type_str(ac_mem_entry_type_t type) {
+    switch (type) {
+        case AC_MEM_ENTRY_CORE:
+            return "AC_MEM_ENTRY_CORE";
+        case AC_MEM_ENTRY_DS:
+            return "AC_MEM_ENTRY_DS";
+        case AC_MEM_ENTRY_INTERFACE:
+            return "AC_MEM_ENTRY_INTERFACE";
+        case AC_MEM_ENTRY_RENDERER:
+            return "AC_MEM_ENTRY_RENDERER";
+        case AC_MEM_ENTRY_VULKAN:
+            return "AC_MEM_ENTRY_VULKAN";
+        case AC_MEM_ENTRY_COUNT:
+            return "AC_MEM_ENTRY_COUNT";
+        default:
+            return "Unknown";
+    }
+}
+
+static size_t mem_entry_sizes[AC_MEM_ENTRY_COUNT] = {0};
+
+void ac_mem_map_count_iter_cb(const void* key, const void* value) {
+    (void)key;
+    ac_mem_entry_t* entry = (ac_mem_entry_t*)value;
+    if (entry->state == AC_MEM_ENTRY_STATE_FREED) {
+        return;
+    }
+    mem_entry_sizes[entry->type] += entry->size;
+}
+
+void ac_mem_show_usage(void) {
+    memset(mem_entry_sizes, 0, sizeof(mem_entry_sizes));
+    ac_log_info("Memory usage:\n");
+    ac_log_info("Memory map size: %zu\n", ac_map_size(ac_mem_map));
+    ac_log_info("Memory map capacity: %zu\n", ac_map_capacity(ac_mem_map));
+    ac_log_info("Memory map load factor: %f\n", (float)ac_mem_map->size / (float)ac_mem_map->capacity);
+    ac_map_iter(ac_mem_map, ac_mem_map_count_iter_cb);
+    for (size_t i = 0; i < AC_MEM_ENTRY_COUNT; i++) {
+        ac_log_info("Memory entry type: %s\n", mem_entry_type_str(i));
+        ac_log_info("Size: %zu\n", mem_entry_sizes[i]);
+    }
+    memset(mem_entry_sizes, 0, sizeof(mem_entry_sizes));
+}
