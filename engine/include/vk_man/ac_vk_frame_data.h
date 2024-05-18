@@ -11,7 +11,7 @@ typedef struct ac_vk_frame_data {
     VkFence render_fence;
 } ac_vk_frame_data;
 
-ac_vk_frame_data create_frame_data(VkDevice device, uint32_t queue_family_index);
-void cleanup_frame_data(VkDevice device, ac_vk_frame_data* frame_data);
+ac_vk_frame_data init_vk_frame_data(VkDevice device, uint32_t queue_family_index);
+void cleanup_vk_frame_data(VkDevice device, ac_vk_frame_data* frame_data);
 
 #endif  // AC_VK_FRAME_DATA_H

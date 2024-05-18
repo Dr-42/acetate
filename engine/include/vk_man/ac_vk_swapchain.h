@@ -7,10 +7,11 @@
 
 typedef struct ac_vk_swapchain_data {
     VkSwapchainKHR swapchain;
-    VkFormat swapchainImageFormat;
-    ac_darray_t* swapchainImages;
-    ac_darray_t* swapchainImageViews;
-    VkExtent2D swapchainExtent;
+    VkFormat swapchain_image_format;
+    uint32_t swapchain_image_count;
+    ac_darray_t* swapchain_images;
+    ac_darray_t* swapchain_image_views;
+    VkExtent2D swapchain_extent;
 } ac_vk_swapchain_data;
 
 ac_vk_swapchain_data init_vk_swapchain(ac_vk_device_data* vk_device_data);

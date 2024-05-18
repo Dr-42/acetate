@@ -109,6 +109,8 @@ ac_vk_swapchain_data init_vk_swapchain(ac_vk_device_data* vk_device_data) {
         image_count = swapchain_support_data.capabilities.maxImageCount;
     }
 
+    swapchain_data.swapchain_image_count = image_count;
+
     VkSwapchainCreateInfoKHR create_info = {0};
     create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     create_info.surface = vk_device_data->surface;
@@ -148,28 +150,28 @@ ac_vk_swapchain_data init_vk_swapchain(ac_vk_device_data* vk_device_data) {
 
     uint32_t swapchain_image_count = 0;
     vkGetSwapchainImagesKHR(vk_device_data->device, swapchain_data.swapchain, &swapchain_image_count, NULL);
-    swapchain_data.swapchainImages = ac_darray_create(sizeof(VkImage), swapchain_image_count, AC_MEM_ENTRY_VULKAN);
+    swapchain_data.swapchain_images = ac_darray_create(sizeof(VkImage), swapchain_image_count, AC_MEM_ENTRY_VULKAN);
     vkGetSwapchainImagesKHR(vk_device_data->device, swapchain_data.swapchain, &swapchain_image_count,
-                            swapchain_data.swapchainImages->data);
-    swapchain_data.swapchainImages->size = swapchain_image_count;
+                            swapchain_data.swapchain_images->data);
+    swapchain_data.swapchain_images->size = swapchain_image_count;
 
-    swapchain_data.swapchainImageFormat = surface_format.format;
-    swapchain_data.swapchainExtent = extent;
+    swapchain_data.swapchain_image_format = surface_format.format;
+    swapchain_data.swapchain_extent = extent;
 
-    swapchain_data.swapchainImageViews =
-        create_swapchain_images(&vk_device_data->device, swapchain_data.swapchainImages, swapchain_data.swapchainImageFormat);
+    swapchain_data.swapchain_image_views =
+        create_swapchain_images(&vk_device_data->device, swapchain_data.swapchain_images, swapchain_data.swapchain_image_format);
 
     return swapchain_data;
 }
 
 void cleanup_vk_swapchain(ac_vk_swapchain_data* vk_swapchain_data, ac_vk_device_data* vk_device_data) {
-    size_t swapchain_image_count = vk_swapchain_data->swapchainImages->size;
+    size_t swapchain_image_count = vk_swapchain_data->swapchain_images->size;
     for (size_t i = 0; i < swapchain_image_count; i++) {
         VkImageView image_view = {};
-        ac_darray_get(vk_swapchain_data->swapchainImageViews, i, &image_view);
+        ac_darray_get(vk_swapchain_data->swapchain_image_views, i, &image_view);
         vkDestroyImageView(vk_device_data->device, image_view, NULL);
     }
-    ac_darray_destroy(vk_swapchain_data->swapchainImageViews);
-    ac_darray_destroy(vk_swapchain_data->swapchainImages);
+    ac_darray_destroy(vk_swapchain_data->swapchain_image_views);
+    ac_darray_destroy(vk_swapchain_data->swapchain_images);
     vkDestroySwapchainKHR(vk_device_data->device, vk_swapchain_data->swapchain, NULL);
 }
