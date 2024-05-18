@@ -2,11 +2,11 @@
 
 #include "vk_man/utils/ac_vk_common.h"
 
-VkCommandPool create_command_pool(VkDevice device, uint32_t queue_family_index) {
+VkCommandPool create_command_pool(VkDevice device, VkCommandPoolCreateFlags flags, uint32_t queue_family_index) {
     VkCommandPoolCreateInfo pool_info = {0};
     pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     pool_info.queueFamilyIndex = queue_family_index;
-    pool_info.flags = 0;
+    pool_info.flags = flags;
 
     VkCommandPool command_pool;
     VkResult res = vkCreateCommandPool(device, &pool_info, NULL, &command_pool);

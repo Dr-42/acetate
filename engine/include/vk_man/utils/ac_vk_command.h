@@ -3,7 +3,7 @@
 
 #include <vulkan/vulkan.h>
 
-VkCommandPool create_command_pool(VkDevice device, uint32_t queue_family_index);
+VkCommandPool create_command_pool(VkDevice device, VkCommandPoolCreateFlags flags, uint32_t queue_family_index);
 VkCommandBuffer create_command_buffer(VkDevice device, VkCommandPool command_pool);
 
 void cleanup_command_pool(VkDevice device, VkCommandPool command_pool);

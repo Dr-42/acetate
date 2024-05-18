@@ -27,3 +27,7 @@ VkFence create_fence(VkDevice device, VkFenceCreateFlags flags) {
 
     return fence;
 }
+
+void cleanup_semaphore(VkDevice device, VkSemaphore semaphore) { vkDestroySemaphore(device, semaphore, NULL); }
+
+void cleanup_fence(VkDevice device, VkFence fence) { vkDestroyFence(device, fence, NULL); }

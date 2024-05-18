@@ -2,17 +2,11 @@
 
 #include "core/ac_mem.h"
 
-void init_swapchain() {}
-void init_command() {}
-void init_sync() {}
-
 ac_vk_data* ac_vk_init(const char* app_name, bool enable_validation_layers, struct SDL_Window* window) {
     ac_vk_data* vk_data = ac_malloc(sizeof(ac_vk_data), AC_MEM_ENTRY_VULKAN);
 
     vk_data->device_data = init_vk_device(app_name, enable_validation_layers, window);
     vk_data->swapchain_data = init_vk_swapchain(&vk_data->device_data);
-    init_command();
-    init_sync();
 
     return vk_data;
 }
