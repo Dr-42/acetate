@@ -1,4 +1,4 @@
-#include "vk_man/utils/vk_init/ac_vk_init.h"
+#include "vk_man/utils/ac_vk_init.h"
 
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_vulkan.h>

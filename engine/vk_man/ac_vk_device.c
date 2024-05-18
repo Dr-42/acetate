@@ -11,7 +11,7 @@
 #include "ds/ac_string.h"
 #include "core/ac_trace.h"
 #include "ds/ac_darray.h"
-#include "vk_man/utils/vk_init/ac_vk_init.h"
+#include "vk_man/utils/ac_vk_init.h"
 
 #include <stdlib.h>
 #include <string.h>

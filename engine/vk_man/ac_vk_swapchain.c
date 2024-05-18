@@ -9,7 +9,8 @@
 #include "core/ac_trace.h"
 #include "ds/ac_darray.h"
 #include "math/ac_math_common.h"
-#include "vk_man/utils/vk_init/ac_vk_init.h"
+#include "vk_man/utils/ac_vk_init.h"
+#include "vk_man/utils/ac_vk_render.h"
 
 #include <stdlib.h>
 
@@ -92,9 +93,16 @@ VkExtent2D choose_swap_extent(const VkSurfaceCapabilitiesKHR* capabilities, SDL_
     }
 }
 
-ac_darray_t* create_swapchain_images(VkDevice device, VkSwapchainKHR swapchain) {
-    // TODO: Implement
-    return NULL;
+ac_darray_t* create_swapchain_images(VkDevice* device, ac_darray_t* swap_chain_images, VkFormat swap_chainformat) {
+    uint32_t swap_chain_images_count = swap_chain_images->size;
+    ac_darray_t* swapchain_image_views = ac_darray_create(sizeof(VkImageView), swap_chain_images_count, AC_MEM_ENTRY_VULKAN);
+    for (uint32_t i = 0; i < swap_chain_images_count; i++) {
+        VkImageView image_view =
+            create_image_view(*device, ((VkImage*)swap_chain_images->data)[i], swap_chainformat, VK_IMAGE_ASPECT_COLOR_BIT);
+        ac_darray_push(swapchain_image_views, &image_view);
+        ac_log_debug("Swapchain image view created for index %d\n", i);
+    }
+    return swapchain_image_views;
 }
 
 ac_vk_swapchain_data init_vk_swapchain(ac_vk_device_data* vk_device_data) {
@@ -158,11 +166,20 @@ ac_vk_swapchain_data init_vk_swapchain(ac_vk_device_data* vk_device_data) {
     swapchain_data.swapchainImageFormat = surface_format.format;
     swapchain_data.swapchainExtent = extent;
 
+    swapchain_data.swapchainImageViews =
+        create_swapchain_images(&vk_device_data->device, swapchain_data.swapchainImages, swapchain_data.swapchainImageFormat);
+
     return swapchain_data;
 }
 
 void cleanup_vk_swapchain(ac_vk_swapchain_data* vk_swapchain_data, ac_vk_device_data* vk_device_data) {
+    size_t swapchain_image_count = vk_swapchain_data->swapchainImages->size;
+    for (size_t i = 0; i < swapchain_image_count; i++) {
+        VkImageView image_view = {};
+        ac_darray_get(vk_swapchain_data->swapchainImageViews, i, &image_view);
+        vkDestroyImageView(vk_device_data->device, image_view, NULL);
+    }
+    ac_darray_destroy(vk_swapchain_data->swapchainImageViews);
     ac_darray_destroy(vk_swapchain_data->swapchainImages);
-    // ac_free(vk_swapchain_data->swapchainImageViews);
     vkDestroySwapchainKHR(vk_device_data->device, vk_swapchain_data->swapchain, NULL);
 }
