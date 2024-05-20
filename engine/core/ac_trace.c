@@ -1,6 +1,14 @@
-#include <stdio.h>
+#define _POSIX_C_SOURCE 200809L
+#define _GNU_SOURCE
+
 #include <stdlib.h>
 #include <string.h>
+#include <execinfo.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <dlfcn.h>
+#include <stdio.h>
 
 #include "core/ac_trace.h"
 
@@ -18,22 +26,12 @@ int ac_fprint_trace(FILE *fp, size_t offset) {
     return len;
 }
 
-#define _GNU_SOURCE
-#include <execinfo.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#define __USE_GNU
-#include <dlfcn.h>
-
 #define MAX_STACK_FRAMES 64
 void *buffer[MAX_STACK_FRAMES];
 
-int ac_get_intermediate_trace(void **stack, size_t size) {
-    return backtrace(stack, size);
-}
+int ac_get_intermediate_trace(void **stack, size_t size) { return backtrace(stack, size); }
 
-int ac_sprint_intermediate_trace(void **stack, char *buffer, size_t offset,
-                                 size_t size) {
+int ac_sprint_intermediate_trace(void **stack, char *buffer, size_t offset, size_t size) {
     size_t prg_len = readlink("/proc/self/exe", prg_name, 1024);
     prg_name[prg_len] = '\0';
     buffer[0] = '\0';
@@ -45,8 +43,7 @@ int ac_sprint_intermediate_trace(void **stack, char *buffer, size_t offset,
         Dl_info info;
         if (dladdr(addr, &info) != 0) {
             void *offset = (void *)((char *)addr - (char *)info.dli_fbase);
-            sprintf(addr2line_cmd, "addr2line -p -f -e %s %p", info.dli_fname,
-                    offset);
+            sprintf(addr2line_cmd, "addr2line -p -f -e %s %p", info.dli_fname, offset);
         } else {
             sprintf(addr2line_cmd, "addr2line -p -f -e %s %p", prg_name, addr);
         }
@@ -103,8 +100,7 @@ int ac_sprint_trace(char *buff, size_t offset) {
         Dl_info info;
         if (dladdr(addr, &info) != 0) {
             void *offset = (void *)((char *)addr - (char *)info.dli_fbase);
-            sprintf(addr2line_cmd, "addr2line -p -f -e %s %p", info.dli_fname,
-                    offset);
+            sprintf(addr2line_cmd, "addr2line -p -f -e %s %p", info.dli_fname, offset);
         } else {
             sprintf(addr2line_cmd, "addr2line -p -f -e %s %p", prg_name, addr);
         }

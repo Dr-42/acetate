@@ -11,7 +11,6 @@ static ac_malloc_t ac_malloc_func = malloc;
 static ac_free_t ac_free_func = free;
 static ac_calloc_t ac_calloc_func = calloc;
 static ac_realloc_t ac_realloc_func = realloc;
-static ac_reallocarray_t ac_reallocarray_func = reallocarray;
 
 static bool ac_mem_track = true;
 
@@ -26,8 +25,6 @@ void set_custom_free(ac_free_t free) { ac_free_func = free; }
 void set_custom_calloc(ac_calloc_t calloc) { ac_calloc_func = calloc; }
 
 void set_custom_realloc(ac_realloc_t realloc) { ac_realloc_func = realloc; }
-
-void set_custom_reallocarray(ac_reallocarray_t reallocarray) { ac_reallocarray_func = reallocarray; }
 
 void ac_mem_track_enabled(bool enabled) { ac_mem_track = enabled; }
 
@@ -357,72 +354,6 @@ void* ac_realloc(void* ptr, size_t size, ac_mem_entry_type_t type) {
         entry->realloc_traces_size += realloc_trace_size;
         entry->realloc_count++;
         void* new_ptr = ac_realloc_func(ptr, size);
-
-        ac_mem_entry_t* sus_entry = ac_map_get(ac_mem_map, new_ptr);
-        if (sus_entry) {
-            if (sus_entry->state != AC_MEM_ENTRY_STATE_FREED) {
-                ac_log_fatal("Memory corruption detected\n");
-                ac_log_fatal("Allocated at:\n");
-                char buffer[1024];
-                ac_sprint_intermediate_trace(sus_entry->alloc_trace, buffer, 0, sus_entry->alloc_trace_size);
-                ac_log_fatal("%s\n", buffer);
-                ac_log_fatal("Current realloc at:\n");
-                ac_print_trace(2);
-                ac_log_fatal_exit("Exiting");
-            }
-            ac_mem_entry_free(sus_entry);
-        }
-        entry->ptr = new_ptr;
-        ac_map_remove(ac_mem_map, ptr);
-        ac_map_set(ac_mem_map, new_ptr, entry);
-
-        ac_mem_entry_free(entry);
-
-        return new_ptr;
-    }
-    ac_log_warn("Trying to realloc a ptr not in the records... Returning NULL");
-    ac_log_info("Reallocation trace: ");
-    ac_print_trace(2);
-    return NULL;
-}
-
-void* ac_reallocarray(void* ptr, size_t nmemb, size_t size, ac_mem_entry_type_t type) {
-    if (!ac_mem_track) {
-        return ac_reallocarray_func(ptr, nmemb, size);
-    }
-    if (ptr == NULL) {
-        return ac_malloc(size, type);
-    }
-
-    ac_mem_entry_t* entry = NULL;
-    entry = ac_map_get(ac_mem_map, ptr);
-
-    if (!entry) {
-        ac_log_warn("Trying to realloc a ptr not in the records... Returning NULL");
-        ac_log_info("Reallocation trace: ");
-        ac_print_trace(2);
-        return NULL;
-    }
-
-    if (entry->ptr == ptr) {
-        entry->state = AC_MEM_ENTRY_STATE_REALLOCATED;
-        void* realloc_trace[ALLOC_TRACE_SIZE];
-        int32_t realloc_trace_size = ac_get_intermediate_trace(realloc_trace, ALLOC_TRACE_SIZE);
-        if (entry->realloc_traces_capacity < realloc_trace_size + entry->realloc_traces_size) {
-            entry->realloc_traces_capacity = (realloc_trace_size + entry->realloc_traces_size) * 2;
-            entry->realloc_traces = ac_realloc_func(entry->realloc_traces, entry->realloc_traces_capacity * sizeof(void*));
-        }
-        if (entry->realloc_count == entry->realloc_trace_sizes_capacity) {
-            entry->realloc_trace_sizes_capacity =
-                entry->realloc_trace_sizes_capacity == 0 ? 1 : entry->realloc_trace_sizes_capacity * 2;
-            entry->realloc_trace_sizes =
-                ac_realloc_func(entry->realloc_trace_sizes, entry->realloc_trace_sizes_capacity * sizeof(int32_t));
-        }
-        entry->realloc_trace_sizes[entry->realloc_count] = realloc_trace_size;
-        memcpy(entry->realloc_traces + entry->realloc_traces_size, realloc_trace, realloc_trace_size * sizeof(void*));
-        entry->realloc_traces_size += realloc_trace_size;
-        entry->realloc_count++;
-        void* new_ptr = ac_reallocarray_func(ptr, nmemb, size);
 
         ac_mem_entry_t* sus_entry = ac_map_get(ac_mem_map, new_ptr);
         if (sus_entry) {

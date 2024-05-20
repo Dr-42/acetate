@@ -45,15 +45,6 @@ typedef void *(*ac_calloc_t)(size_t nmemb, size_t size);
 typedef void *(*ac_realloc_t)(void *ptr, size_t size);
 
 /**
- * Custom reallocarray function.
- * @param ptr A pointer to the memory block to reallocate.
- * @param nmemb The new number of elements.
- * @param size The size of each element.
- * @return A pointer to the reallocated memory block.
- */
-typedef void *(*ac_reallocarray_t)(void *ptr, size_t nmemb, size_t size);
-
-/**
  * Set custom malloc
  * @param malloc The custom malloc function.
  * @see ac_malloc
@@ -80,13 +71,6 @@ void set_custom_calloc(ac_calloc_t calloc);
  * @see ac_realloc
  */
 void set_custom_realloc(ac_realloc_t realloc);
-
-/**
- * Set custom reallocarray
- * @param reallocarray The custom reallocarray function.
- * @see ac_reallocarray
- */
-void set_custom_reallocarray(ac_reallocarray_t reallocarray);
 
 /**
  * Enable/Disable memory tracking.
@@ -236,18 +220,6 @@ void *ac_calloc(size_t nmemb, size_t size, ac_mem_entry_type_t type);
  * @see ac_realloc_t
  */
 void *ac_realloc(void *ptr, size_t size, ac_mem_entry_type_t type);
-
-/**
- * Reallocarray function.
- * @param ptr A pointer to the memory block to reallocate.
- * @param nmemb The new number of elements.
- * @param size The size of each element.
- * @param type The type of the memory block.
- * @see ac_mem_entry_type_t
- * @return A pointer to the reallocated memory block.
- * @see ac_reallocarray_t
- */
-void *ac_reallocarray(void *ptr, size_t nmemb, size_t size, ac_mem_entry_type_t type);
 
 /**
  * Memcpy function.
