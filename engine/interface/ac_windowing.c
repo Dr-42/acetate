@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_vulkan.h>
 #include <stdio.h>
@@ -55,6 +56,12 @@ void ac_window_update(ac_window_t* window, void (*update)(void* user_data), void
             }
             if (e.window.event == SDL_WINDOWEVENT_RESTORED) {
                 window->is_minimized = false;
+            }
+        }
+        if (e.type == SDL_KEYUP) {
+            if (e.key.keysym.sym == SDLK_ESCAPE) {
+                window->running = false;
+                return;
             }
         }
     }

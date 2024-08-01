@@ -34,8 +34,6 @@ int main() {
         ac_window_update(window, NULL, NULL);
     }
 
-    ac_mem_show_usage();
-
     ac_window_shutdown(window, NULL, NULL);
     ac_mem_exit();
     return 0;
