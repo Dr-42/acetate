@@ -1,13 +1,16 @@
+#include "interface/ac_windowing.h"
+
+#include <string.h>
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_vulkan.h>
-#include <stdio.h>
 
 #include "core/ac_mem.h"
 #include "core/ac_log.h"
 #include "vk_man/ac_vulkan.h"
-#include "interface/ac_windowing.h"
 
 typedef struct ac_window_t {
     ac_window_settings_t settings;
@@ -18,6 +21,13 @@ typedef struct ac_window_t {
 } ac_window_t;
 
 ac_window_t* ac_window_init(ac_window_settings_t* settings) {
+    // Check if host is running wayland. If so, use wayland windowing system
+    char* wayland_display = getenv("XDG_SESSION_TYPE");
+    ac_log_debug("XDG_SESSION_TYPE: %s", wayland_display);
+    if (wayland_display && strcmp(wayland_display, "wayland") == 0) {
+        SDL_setenv("SDL_VIDEODRIVER", "wayland", 1);
+        ac_log_debug("Wayland windowing system enabled");
+    }
     ac_window_t* window = ac_malloc(sizeof(ac_window_t), AC_MEM_ENTRY_INTERFACE);
     window->settings = *settings;
     SDL_WindowFlags flags = SDL_WINDOW_VULKAN;

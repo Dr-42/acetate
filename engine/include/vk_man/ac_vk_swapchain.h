@@ -15,6 +15,7 @@ typedef struct ac_vk_swapchain_data {
 } ac_vk_swapchain_data;
 
 ac_vk_swapchain_data init_vk_swapchain(ac_vk_device_data* vk_device_data);
+void recreate_vk_swapchain(ac_vk_swapchain_data* vk_swapchain_data, ac_vk_device_data* vk_device_data);
 void cleanup_vk_swapchain(ac_vk_swapchain_data* vk_swapchain_data, ac_vk_device_data* vk_device_data);
 
 #endif  // AC_VK_SWAPCHAIN_H

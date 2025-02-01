@@ -164,6 +164,11 @@ ac_vk_swapchain_data init_vk_swapchain(ac_vk_device_data* vk_device_data) {
     return swapchain_data;
 }
 
+void recreate_vk_swapchain(ac_vk_swapchain_data* vk_swapchain_data, ac_vk_device_data* vk_device_data) {
+    cleanup_vk_swapchain(vk_swapchain_data, vk_device_data);
+    *vk_swapchain_data = init_vk_swapchain(vk_device_data);
+}
+
 void cleanup_vk_swapchain(ac_vk_swapchain_data* vk_swapchain_data, ac_vk_device_data* vk_device_data) {
     size_t swapchain_image_count = vk_swapchain_data->swapchain_images->size;
     for (size_t i = 0; i < swapchain_image_count; i++) {

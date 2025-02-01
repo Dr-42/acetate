@@ -8,6 +8,7 @@
 
 #include "math/ac_math_common.h"
 #include "vk_man/ac_vk_frame_data.h"
+#include "vk_man/ac_vk_swapchain.h"
 #include "vk_man/utils/ac_vk_command.h"
 #include "vk_man/utils/ac_vk_common.h"
 #include "vk_man/utils/ac_vk_render.h"
@@ -105,7 +106,14 @@ void ac_vk_draw_frame(ac_vk_data* vk_data) {
 
     res = vkAcquireNextImageKHR(vk_data->device_data.device, vk_data->swapchain_data.swapchain, UINT64_MAX,
                                 frame_data->swapchain_semaphore, VK_NULL_HANDLE, &image_index);
-    VK_CHECK(res);
+    if (res == VK_ERROR_OUT_OF_DATE_KHR) {
+        ac_log_warn("Swapchain out of date\n");
+        recreate_vk_swapchain(&vk_data->swapchain_data, &vk_data->device_data);
+        ac_log_info("Swapchain recreated\n");
+        return;
+    } else if (res != VK_SUCCESS && res != VK_SUBOPTIMAL_KHR) {
+        VK_CHECK(res);
+    }
 
     VkCommandBuffer cmd = frame_data->command_buffer;
     res = vkResetCommandBuffer(cmd, 0);
@@ -150,5 +158,13 @@ void ac_vk_draw_frame(ac_vk_data* vk_data) {
     presentInfo.pImageIndices = &image_index;
 
     res = vkQueuePresentKHR(vk_data->device_data.graphics_queue, &presentInfo);
+    if (res == VK_ERROR_OUT_OF_DATE_KHR) {
+        ac_log_warn("Swapchain out of date\n");
+        recreate_vk_swapchain(&vk_data->swapchain_data, &vk_data->device_data);
+        ac_log_info("Swapchain recreated\n");
+        return;
+    } else if (res != VK_SUCCESS && res != VK_SUBOPTIMAL_KHR) {
+        VK_CHECK(res);
+    }
     VK_CHECK(res);
 }

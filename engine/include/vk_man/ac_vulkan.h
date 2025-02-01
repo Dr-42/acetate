@@ -11,6 +11,18 @@
 
 struct SDL_Window;
 
+/// Vulkan data
+/// Contains all vulkan data
+/// Fields:
+/// - device_data: Vulkan device data
+/// - swapchain_data: Vulkan swapchain data
+/// - frame_data: Vector of ac_vk_frame_data
+/// - current_frame: Index of current frame
+/// Methods:
+/// - ac_vk_init: Initializes vulkan
+/// - ac_vk_get_current_frame_data: Returns current frame data
+/// - ac_vk_draw_frame: Draws a frame
+/// - ac_vk_cleanup: Cleans up vulkan
 typedef struct ac_vk_data {
     ac_vk_device_data device_data;
     ac_vk_swapchain_data swapchain_data;
